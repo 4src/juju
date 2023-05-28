@@ -33,7 +33,7 @@ function settings(s; update=false)
   #---------------------------
   pat = r"\n *-[^-]+--(\S+)[^=]+= *(\S+)"
   d   = Dict(cli(k,String(v)) for (k,v) in eachmatch(pat,s))
-  ((;d...), s) end # Julia idiom for coercing a dictionary to a named tuple
+  ((;d...), s) end # Julia idiom. Coerces a dictionary to a named tuple
 
 oo(x) = println(o(x))
 
@@ -56,21 +56,24 @@ function tests(funs...)
   function show(s,c) printstyled(s;bold=true,color=c) end
   global the,help = settings(help;update=true)
   global rseed
-  cache = deepcopy(the)
   fails = 0
-  for fun in funs
-    k = string(fun)
-    if k==the.go || the.go=="all"
-      show(">> $k ",:blue)
-      pass, rseed = true, the.seed
-      try pass = fun()
-      catch  
-        @error "E> " exception=(e, catch_backtrace())
-        pass = false 
-      finally the = deepcopy(cache) 
-      end
-      if pass == false 
-        show("FAIL\n",:light_red)
-        fails += 1
-      else show("PASS\n",:light_green) end end end 
-  fails end
+  if the.help
+    println(help)
+  else 
+    cache = deepcopy(the)
+    for fun in funs
+      k = string(fun)
+      if k==the.go || the.go=="all"
+        show(">> $k ",:blue)
+        pass, rseed = true, the.seed
+        try pass = fun()
+        catch  
+          @error "E> " exception=(e, catch_backtrace())
+          pass = false 
+        finally the = deepcopy(cache) 
+        end
+        if pass == false 
+          show("FAIL\n",:light_red)
+          fails += 1
+        else show("PASS\n",:light_green) end end end end 
+    fails  end 

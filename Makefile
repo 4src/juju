@@ -17,5 +17,4 @@ julia:
 	brew link julia
 
 packages: ## install julia packages:
-	julia -e 'using Pkg; Pkg.add("Parameters")'
-	julia -e 'using Pkg; Pkg.add("ResumableFunctions")'
+	julia -e 'using Pkg; Pkg.add("Parameters"); Pkg.add("ResumableFunctions")'
