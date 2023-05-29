@@ -3,17 +3,28 @@ using Random
 using Test
 include("juju.jl")
 
-function aa()
+function coerced()
   typeof(coerce("true")) == typeof(true) end
 
-function bb() println(33); false end
+function manyed()
+  a= sort(many([1,2,3,4],20))
+  return length(a)==20 && a[1] == 1 && a[end]==4 end
 
-function cc()
-  n=0
-  for r in csv("../data/auto93.csv"); n=n+length(r) end
-  n==3192 end
+function csved() 
+  n=0; for r in csv("../data/auto93.csv"); n=n+length(r) end
+  n == 3192 end
 
-exit(tests(aa, bb, cc))
+function numed()
+  num = NUM()
+  [inc!(num,ranf()) for x in 1:10^4]
+  return  .49 < mid(num) < .51  &&  .28 < div(num) < .32 end
+
+function symed()
+  sym = SYM()
+  [inc!(sym,x) for x in "aaaabbc"]
+  return mid(sym) == 'a' && 1.37 < div(sym) < 1.38 end
+
+exit(tests(coerced,manyed,csved, numed,symed))
 
 # tests((
 #   libs = -> begin

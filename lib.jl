@@ -67,7 +67,7 @@ function tests(funs...)
         show(">> $k ",:blue)
         pass, rseed = true, the.seed
         try pass = fun()
-        catch  
+        catch  e
           @error "E> " exception=(e, catch_backtrace())
           pass = false 
         finally the = deepcopy(cache) 
@@ -75,5 +75,6 @@ function tests(funs...)
         if pass == false 
           show("FAIL\n",:light_red)
           fails += 1
-        else show("PASS\n",:light_green) end end end end 
-    fails  end 
+        else 
+          show("PASS\n",:light_green) end end end end 
+  fails end 
