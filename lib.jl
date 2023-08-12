@@ -1,4 +1,4 @@
-# vim: set et sts=2 sw=2 ts=2 :
+# vim: set et sts=3 sw=3 ts=3 :
 using Parameters
 using ResumableFunctions
 
@@ -25,15 +25,14 @@ function coerce(x)
       @yield map(coerce,split(new,",")) end end  end
 
 function settings(s; update=false)
-  function cli(k,v)
-    for (i,flag) in enumerate(ARGS)
-      if update && (flag=="-"*k[1] || flag=="--"*k)
-        v= v=="true"  ? "false" : (v=="false" ? "true" : ARGS[i+1]) end end 
-    Symbol(k) => coerce(v) end 
-  #---------------------------
-  pat = r"\n *-[^-]+--(\S+)[^=]+= *(\S+)"
-  d   = Dict(cli(k,String(v)) for (k,v) in eachmatch(pat,s))
-  ((;d...), s) end # Julia idiom. Coerces a dictionary to a named tuple
+   function cli(k,v)
+      for (i,flag) in enumerate(ARGS)
+         if update && (flag=="-"*k[1] || flag=="--"*k)
+            v= v=="true"  ? "false" : (v=="false" ? "true" : ARGS[i+1]) end end 
+      Symbol(k) => coerce(v) end 
+   pat = r"\n *-[^-]+--(\S+)[^=]+= *(\S+)"
+   d   = Dict(cli(k,String(v)) for (k,v) in eachmatch(pat,s))
+   ((;d...), s) end # Julia idiom. Coerces a dictionary to a named tuple
 
 oo(x) = println(o(x))
 
@@ -48,8 +47,8 @@ o(i::Any)        = begin
   s, pre="$(typeof(i)){", ""
   for f in sort([x for x in fieldnames(typeof(i)) 
                   if ("$x"[1] != '_')])
-    s = s * pre * "$f=$(o(getfield(i,f)))"
-    pre=", " end
+      s = s * pre * "$f=$(o(getfield(i,f)))"
+      pre=", " end
   return s * "}" end
 
 function tests(funs...)
@@ -67,14 +66,13 @@ function tests(funs...)
         show(">> $k ",:blue)
         pass, rseed = true, the.seed
         try pass = fun()
-        catch  e
+        catch e
           @error "E> " exception=(e, catch_backtrace())
           pass = false 
-        finally the = deepcopy(cache) 
+        finally 
+          the = deepcopy(cache) 
         end
-        if pass == false 
-          show("FAIL\n",:light_red)
-          fails += 1
-        else 
-          show("PASS\n",:light_green) end end end end 
+        if pass != false show("PASS\n",:light_green) 
+        else show("FAIL\n",:light_red)
+             fails += 1 end end end end 
   fails end 
