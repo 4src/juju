@@ -46,9 +46,7 @@ function dist(d::Dict, x, y)
   x=="?" && y=="?" ? 1 : (x==y ? 1 : 0) end
 
 function dist(v::Vector,x,y) 
-  if x=="?" && y=="?" 
-     1 
-  else 
+  if x=="?" && y=="?" 1 else 
     x,y = norm(v,x), norm(v,y)
     if x=="?" x= (y < .5 ? 1 : 0) end
     if y=="?" y= (x < .5 ? 1 : 0) end 
