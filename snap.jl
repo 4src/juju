@@ -1,3 +1,4 @@
+import MutableNamedTuples
 help="
 tiny.jl: a fast way to find good options
 (c) Tim Menzies <timm@ieee.org>, BSD-2 license
@@ -15,21 +16,71 @@ OPTIONS:
   -s --seed   random number seed       = 937162211"
 
 function coerce(x)
-  for thing in [Int32,Float64,Bool] if (y=tryparse(thing,x)) != nothing return y end end 
+  for thing in [Int32,Float64,Bool] 
+    if (y=tryparse(thing,x)) != nothing return y end end 
   x end
 
 the=(;Dict(Symbol(k) => coerce(v) 
-          for (k,v) in eachmatch(r"\n *-[^-]+--(\S+)[^=]+= *(\S+)",help))...) 
+           for (k,v) in eachmatch(r"\n *-[^-]+--(\S+)[^=]+= *(\S+)",help))...) 
 #---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- -----------
+function COL(i::String) 
+  occursin(r"^[A-Z]", i) ? [] : Dict() end
+
+function COLS(v::Vector{String})
+  klass,all,x,y = nothing,[],Dict(),Dict()
+  for (n,(s,col)) in enumerate([(s,COL(s)) for s in v])
+    s[end] != "X" print() end end 
+
+inc!(i,x)         = if x != "?" inc1!(i,x) end  
+inc1(i::Vector,x) = push!(i,x)  
+inc1(i::Dict, x)  = (i[s] = get(i,x,0) + 1) 
+
+mid(i::Vector)   = per(i,.5)
+mid(i::Dict)     = mode(i)
+div(col::Vector) = (per(col,.9) - per(col,.1))/2.46
+div(col::Dict)   = entropy(col) 
+
+norm(v::Vector,n::Number) = n=="?" ? n : (n - v[1]) / (v[end] - v[1] + 1/BIG)
+
+function dist(d::Dict, x, y)  
+  x=="?" && y=="?" ? 1 : (x==y ? 1 : 0) end
+
+function dist(v::Vector,x,y) 
+  if x=="?" && y=="?" 
+     1 
+  else 
+    x,y = norm(v,x), norm(v,y)
+    if x=="?" x= (y < .5 ? 1 : 0) end
+    if y=="?" y= (x < .5 ? 1 : 0) end 
+    abs(x - y) end end
+
+BOX = MutableNamedTuples
+
+aaa(i::Tuple) = 1
+
+#---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- -----------
+BIG = 1E30
+
+int(n::Number)         = floor(Int,n)
+any(v::Vector)         = v[ rani(1,length(v))  ]
+many(v::Vector,n::Int) = [any(v)  for _ in 1:n]
+
+mode(d::Dict)       = findmax(d)[2]
+per(v::Vector,p=.5) = v[ max(1, int(p*length(v)))]
+
+function entropy(d::Dict)
+  N = sum((n for (_,n) in d))
+  -sum(n/N*log2(n/N) for (_,n) in d if n>0) end
+
 rseed=the.seed
 function rani(nlo, nhi)  floor(Int, .5 + ranf(nlo,nhi)) end
 function ranf(nlo=0, nhi=1) 
   global rseed = (16807 * rseed) % 214748347 
   nlo + (nhi - nlo) * rseed / 214748347 end
-#---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- -----------
-function inc!(i,x)        if x != "?" inc1!(i,x) end end
-function inc1(v::Vector,x) push!(v,x) end
-function inc1(d::Dict, x)  d[s] = get(d,x,0) + 1 end
 
-
-print(typeof([]))
+function csv(sfile,fun)
+  src = open(sfile)
+  while ! eof(src)
+    new = replace(readline(src), r"([ \t\n]|#.*)"=>"")
+    if sizeof(new) != 0
+      fun(map(coerce,split(new,","))) end end end
