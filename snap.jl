@@ -1,5 +1,5 @@
 help="
-tiny.jl: a fast way to find good options
+snap.jl: a fast way to find good options
 (c) Tim Menzies <timm@ieee.org>, BSD-2 license
 
 OPTIONS:
@@ -13,14 +13,11 @@ OPTIONS:
   -p --p      distance coefficient     = 2
   -r --reuse  do npt reuse parent node = true
   -s --seed   random number seed       = 937162211"
-
-
-
 #---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- ----------  
 COL(s::String) = occursin(r"^[A-Z]", s) ? [] : Dict() 
 
-inc1(v::Vector,x) = push!(v,x)  
-inc1(d::Dict,  x) = (d[x] = get(d,x,0) + 1) 
+inc1(v::Vector,x::Number) = push!(v,x)  
+inc1(d::Dict,  x) = d[x] = get(d,x,0) + 1  
 
 mid(v::Vector) = per(v, .5)
 mid(d::Dict)   = findmax(d)[2]
@@ -30,7 +27,7 @@ div(d::Dict)   = begin
   N = sum(n for (_,n) in d if n>0)
   - sum(n/N*log2(n/N) for (_,n) in d if n>0) end
 
-norm(v::Vector, n::Number) =  (x - v[1]) / (v[end] - v[1] + 1/BIG)
+norm(v::Vector, n::Number) = (n - v[1]) / (v[end] - v[1] + 1/BIG)
 norm(_, x) = x
 
 dist(d::Dict,  x,y) = (x=="?" && y=="?") ? 1 : (x==y ? 0 : 1)  
@@ -51,7 +48,7 @@ DATA(src) = begin
   [sort(col) for col in data1.cols.all if col isa Vector]
   data1 end
 
-data!(data1::Data, row) = begin
+data!(data1::Data, row::Vector) = begin
   if (data1.cols==nothing) data1.cols = COLS(row) else
     [inc!(col,x) for (col,x) in zip(data1.cols.all,row) if x != "?"]
     push!(row, data1.rows) end end
@@ -60,7 +57,7 @@ COLS(v::Vector{String}) = begin
   cols1 = Cols(names=v, all= [COL(s) for s in v])
   for (n,(s,col)) in enumerate(zip(v,cols1.all))
     if s[end] != "X" 
-      if s[end]=="!" klass=col end
+      if s[end] == "!" klass=col end
       (occursin(s[end],"!+-") ? cols1.y : cols1.x)[n] = col end end  
   cols1 end
  
