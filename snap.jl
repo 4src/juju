@@ -31,25 +31,25 @@ function COLS(v::Vector{String})
   for (n,(s,col)) in enumerate([(s,COL(s)) for s in v])
     if s[end] != "X" print() end end 
 
-inc!(i,x)         = if x != "?" inc1!(i,x) end  
+inc!(i,x) = if x != "?" inc1!(i,x) end  
 
-inc1(i::Vector,x)          = push!(i,x)  
-mid( i::Vector)            = per(i,.5)
-div( i::Vector)            = (per(i,.9) - per(i,.1))/2.46
-norm(i::Vector, n::Number) = n=="?" ? n : (n - i[1]) / (i[end] - i[1] + 1/BIG)
+inc1!(i::Vector,x)  = push!(i,x)  
+mid(  i::Vector)    = per(i, .5)
+div(  i::Vector)    = (per(i, .9) - per(i, .1))/2.46
+norm( i::Vector, x) = x=="?" ? x : (x - i[1]) / (i[end] - i[1] + 1/BIG)
 
-inc1(i::Dict, x)  = (i[s] = get(i,x,0) + 1) 
-mid( i::Dict)     = mode(i)
-div( i::Dict)     = entropy(i) 
+inc1!(i::Dict, x)   = (i[s] = get(i,x,0) + 1) 
+mid(  i::Dict)      = findmax(i)[2]
+div(  i::Dict)      = entropy(i) 
 
-function dist(d::Dict, x, y)  
+function dist(i::Dict, x, y)  
   (x=="?" && y=="?") ? 1 : (x==y ? 1 : 0) end
 
-function dist(v::Vector,x,y) 
-  if (x=="?" && y=="?") 1 else 
-    x,y = norm(v,x), norm(v,y)
-    if x=="?" x= (y < .5 ? 1 : 0) end
-    if y=="?" y= (x < .5 ? 1 : 0) end 
+function dist(i::Vector,x,y) 
+  if (x=="?" && y=="?") 1 else
+    x,y = norm(i,x), norm(i,y)
+    if x=="?" x = (y < .5 ? 1 : 0) end
+    if y=="?" y = (x < .5 ? 1 : 0) end 
     abs(x - y) end end
 
 BOX = MutableNamedTuples
@@ -63,7 +63,6 @@ int(n::Number)         = floor(Int,n)
 any(v::Vector)         = v[ rani(1,length(v))  ]
 many(v::Vector,n::Int) = [any(v)  for _ in 1:n]
 
-mode(d::Dict)       = findmax(d)[2]
 per(v::Vector,p=.5) = v[ max(1, int(p*length(v)))]
 
 function entropy(d::Dict)
