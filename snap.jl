@@ -27,7 +27,7 @@ div(d::Dict)   = begin
   N = sum(n for (_,n) in d if n>0)
   - sum(n/N*log2(n/N) for (_,n) in d if n>0) end
 
-norm(v::Vector, n::Number) = (n - v[1]) / (v[end] - v[1] + 1/BIG)
+norm(v::Vector, n::Number) = (n - v[1]) / (v[end] - v[1] + 1E-30)
 norm(_, x) = x
 
 dist(d::Dict,  x,y) = (x=="?" && y=="?") ? 1 : (x==y ? 0 : 1)  
@@ -63,14 +63,12 @@ COLS(v::Vector{String}) = begin
  
 clone(data1::Data, src=[]) = DATA( vcat([data1.cols.name],src) )
 
-#---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- -----------
-make(x) = begin
-  for thing in [Int32,Float64,Bool] if ((y=tryparse(thing,x)) != nothing) return y end end 
-  x end
+#---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- ----------
+make(s) = begin
+  for t in [Int32,Float64,Bool] if ((x=tryparse(t,s)) != nothing) return x end end 
+  s end
 
 the=(;Dict(Symbol(k) => make(v) for (k,v) in eachmatch(r"\n.*--(\S+)[^=]+= *(\S+)",help))...)  
-
-BIG = 1E30
 
 int(n::Number)         = floor(Int,n)
 any(v::Vector)         = v[ rani(1,length(v))  ]
@@ -96,9 +94,9 @@ cli(settings::NamedTuple) = begin
   for (k,v) in pairs(settings) 
     s = String(k)
     tmp[k] = v
-    for (i,flag) in enumerate(ARGS)
+    for (argv,flag) in enumerate(ARGS)
       if (flag=="-"*s[1] || flag=="--"*s)
-        tmp[k] = s==true ? false : (s==false ? true : coerce(ARGS[i+1]))  end end end
+        tmp[k] = s==true ? false : (s==false ? true : make(ARGS[argv+1])) end end end
   (;tmp...) end
 
 #-----------------------------------------------
@@ -113,9 +111,11 @@ egs = Dict(
 
 if abspath(PROGRAM_FILE) == @__FILE__
   defaults = cli(the)
+  println(defaults)
   for arg in ARGS
     for (s,fun) in egs 
       if arg == split(s)[1] 
         global the = defaults
+       
         reseed = the.seed
         fun() end end end end 
