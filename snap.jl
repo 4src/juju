@@ -29,24 +29,24 @@ function COL(i::String)
 function COLS(v::Vector{String})
   klass,all,x,y = nothing,[],Dict(),Dict()
   for (n,(s,col)) in enumerate([(s,COL(s)) for s in v])
-    s[end] != "X" print() end end 
+    if s[end] != "X" print() end end 
 
 inc!(i,x)         = if x != "?" inc1!(i,x) end  
-inc1(i::Vector,x) = push!(i,x)  
+
+inc1(i::Vector,x)          = push!(i,x)  
+mid( i::Vector)            = per(i,.5)
+div( i::Vector)            = (per(i,.9) - per(i,.1))/2.46
+norm(i::Vector, n::Number) = n=="?" ? n : (n - i[1]) / (i[end] - i[1] + 1/BIG)
+
 inc1(i::Dict, x)  = (i[s] = get(i,x,0) + 1) 
-
-mid(i::Vector)   = per(i,.5)
-mid(i::Dict)     = mode(i)
-div(col::Vector) = (per(col,.9) - per(col,.1))/2.46
-div(col::Dict)   = entropy(col) 
-
-norm(v::Vector,n::Number) = n=="?" ? n : (n - v[1]) / (v[end] - v[1] + 1/BIG)
+mid( i::Dict)     = mode(i)
+div( i::Dict)     = entropy(i) 
 
 function dist(d::Dict, x, y)  
-  x=="?" && y=="?" ? 1 : (x==y ? 1 : 0) end
+  (x=="?" && y=="?") ? 1 : (x==y ? 1 : 0) end
 
 function dist(v::Vector,x,y) 
-  if x=="?" && y=="?" 1 else 
+  if (x=="?" && y=="?") 1 else 
     x,y = norm(v,x), norm(v,y)
     if x=="?" x= (y < .5 ? 1 : 0) end
     if y=="?" y= (x < .5 ? 1 : 0) end 
