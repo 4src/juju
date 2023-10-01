@@ -71,7 +71,7 @@ make(s) = begin
 the=(;Dict(Symbol(k) => make(v) for (k,v) in eachmatch(r"\n.*--(\S+)[^=]+= *(\S+)",help))...)  
 
 int(n::Number)         = floor(Int,n)
-any(v::Vector)         = v[ rani(1,length(v))  ]
+any(v::Vector)         = v[rani(1,length(v))]
 many(v::Vector,n::Int) = [any(v)  for _ in 1:n]
 
 per(v::Vector,p=.5) = v[ max(1, int(p*length(v)))]
