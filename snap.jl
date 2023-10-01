@@ -16,17 +16,46 @@ OPTIONS:
   -s --seed   random number seed       = 937162211"
 
 function coerce(x)
-  for thing in [Int32,Float64,Bool] 
-    if (y=tryparse(thing,x)) != nothing return y end end 
+  for thing in [Int32,Float64,Bool] if (y=tryparse(thing,x)) != nothing return y end end 
   x end
 
-the=(;Dict(Symbol(k) => coerce(v) 
-           for (k,v) in eachmatch(r"\n *-[^-]+--(\S+)[^=]+= *(\S+)",help))...) 
-#---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- -----------
-BOX = MutableNamedTuples
+the=(;Dict(Symbol(k) => coerce(v) for (k,v) in eachmatch(r"\n.*--(\S+)[^=]+= *(\S+)",help))...) 
+#---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- ----------  
+NAMES = julia
 
-function COL(i::String) 
-  occursin(r"^[A-Z]", i) ? [] : Dict() end
+function COL(i::String) occursin(r"^[A-Z]", i) ? [] : Dict() end
+
+inc!(i,x)          = if x != "?" inc1!(i,x) end  
+inc1!(i::Vector,x) = push!(i,x)  
+inc1!(i::Dict,  x) = (i[s] = get(i,x,0) + 1) 
+
+mid(i::Vector) = per(i, .5)
+mid(i::Dict)   = findmax(i)[2]
+
+div(i::Vector) = (per(i, .9) - per(i, .1))/2.46
+div(i::Dict)   = entropy(i) 
+
+norm(i::Vector, x) = x=="?" ? x : (x - i[1]) / (i[end] - i[1] + 1/BIG)
+norm(i::Dict,   x) = x
+
+function dist(i::Dict,  x,y)  (x=="?" && y=="?") ? 1 : (x==y ? 1 : 0) end
+function dist(i::Vector,x,y) 
+  if (:x=="?" && y=="?") 1 else
+    x,y = norm(i,x), norm(i,y)
+    if x=="?" x = (y < .5 ? 1 : 0) end
+    if y=="?" y = (x < .5 ? 1 : 0) end 
+    abs(x - y) end end
+
+function DATA(src) 
+  data = NAMES(rows=[], cols=nothing)
+  src isa String ? csv(src, row -> data!(row)) : [data!(row) for row in src]  
+  [sort(col) for col in data.cols.all if col isa Vector]
+  data end
+
+function data!(data, row)
+  if data.cols == nothing  data.cols=COLS(row) else
+    [inc!(col,x) for (col,x) in zip(data.cols.all,row)]
+    push!(row, data.rows) end end
 
 function COLS(v::Vector{String})
   klass, x, y, all = nothing, Dict(), Dict(), [COL(s) for s in v]
@@ -34,46 +63,9 @@ function COLS(v::Vector{String})
     if s[end] != "X" 
       if s[end]=="!" klass=col end
       (occursin(s[end],"!+-") ? y : x)[n] = col end end
-  BOX(all=all, x=x, y=y, names=v) end
-
-inc!(i,x) = if x != "?" inc1!(i,x) end  
-
-inc1!(i::Vector,x)  = push!(i,x)  
-mid(  i::Vector)    = per(i, .5)
-div(  i::Vector)    = (per(i, .9) - per(i, .1))/2.46
-norm( i::Vector, x) = x=="?" ? x : (x - i[1]) / (i[end] - i[1] + 1/BIG)
-
-inc1!(i::Dict, x)   = (i[s] = get(i,x,0) + 1) 
-mid(  i::Dict)      = findmax(i)[2]
-div(  i::Dict)      = entropy(i) 
-
-function DATA(src) 
-  data = BOX(rows=[], cols=nothing)
-  if src isa String 
-    csv(src, row -> inc!(data,row)) 
-  else
-    [inc!(datarow) for row in v] end
-  [sort(col) for col in data.cols.all if col isa Vector]
-  data end
-
+  NAMES(all=all, x=x, y=y, names=v) end
+  
 clone(data, src=[]) = DATA( vcat([data.cols.name],src) )
-
-function inc!(data::Tuple, v::Vector)
-  if data.cols == nothing 
-    data.cols=COLS(v) 
-  else
-    [inc!(col,x) for (col,x) in zip(data.cols.all,v)]
-    push!(row, data.rows) end end
-
-function dist(i::Dict, x, y)  
-  (x=="?" && y=="?") ? 1 : (x==y ? 1 : 0) end
-
-function dist(i::Vector,x,y) 
-  if (:x=="?" && y=="?") 1 else
-    x,y = norm(i,x), norm(i,y)
-    if x=="?" x = (y < .5 ? 1 : 0) end
-    if y=="?" y = (x < .5 ? 1 : 0) end 
-    abs(x - y) end end
 
 #---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- -----------
 BIG = 1E30
@@ -109,12 +101,13 @@ function cli(d)
     for (i,flag) in enumerate(ARGS)
       if (flag=="-"*s[1] || flag=="--"*s)
         tmp[k] = s==true ? false : (s==false ? true : coerce(ARGS[i+1]))  end end end
-  MutableNamedTuple(;tmp...) end
+  NAMES(;tmp...) end
 
+#-----------------------------------------------
 eg_settings() = println(the)
 eg_csv() = csv(the.file, (r) -> println(r))
 
-tests = Dict(
+egs = Dict(
   "settings" => eg_settings, 
   "csv"      => eg_csv
 )
@@ -122,5 +115,5 @@ tests = Dict(
 if abspath(PROGRAM_FILE) == @__FILE__
   the = cli(the)
   for arg in ARGS
-    for (s,fun) in tests 
+    for (s,fun) in egs 
       if arg == split(s)[1] fun() end end end end 
