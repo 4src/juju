@@ -1,4 +1,4 @@
-import MutableNamedTuples
+using MutableNamedTuples
 help="
 tiny.jl: a fast way to find good options
 (c) Tim Menzies <timm@ieee.org>, BSD-2 license
@@ -12,7 +12,7 @@ OPTIONS:
   -H --Half   where to find for far    = 256
   -m --min    min size                 = .5
   -p --p      distance coefficient     = 2
-  -r --reuse  do npt reuse parent node = True
+  -r --reuse  do npt reuse parent node = true
   -s --seed   random number seed       = 937162211"
 
 function coerce(x)
@@ -23,13 +23,18 @@ function coerce(x)
 the=(;Dict(Symbol(k) => coerce(v) 
            for (k,v) in eachmatch(r"\n *-[^-]+--(\S+)[^=]+= *(\S+)",help))...) 
 #---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- -----------
+BOX = MutableNamedTuples
+
 function COL(i::String) 
   occursin(r"^[A-Z]", i) ? [] : Dict() end
 
 function COLS(v::Vector{String})
-  klass,all,x,y = nothing,[],Dict(),Dict()
-  for (n,(s,col)) in enumerate([(s,COL(s)) for s in v])
-    if s[end] != "X" print() end end 
+  klass, x, y, all = nothing, Dict(), Dict(), [COL(s) for s in v]
+  for (n,(s,col)) in enumerate(zip(v,all))
+    if s[end] != "X" 
+      if s[end]=="!" klass=col end
+      (occursin(s[end],"!+-") ? y : x)[n] = col end end
+  BOX(all=all, x=x, y=y, names=v) end
 
 inc!(i,x) = if x != "?" inc1!(i,x) end  
 
@@ -42,19 +47,33 @@ inc1!(i::Dict, x)   = (i[s] = get(i,x,0) + 1)
 mid(  i::Dict)      = findmax(i)[2]
 div(  i::Dict)      = entropy(i) 
 
+function DATA(src) 
+  data = BOX(rows=[], cols=nothing)
+  if src isa String 
+    csv(src, row -> inc!(data,row)) 
+  else
+    [inc!(datarow) for row in v] end
+  [sort(col) for col in data.cols.all if col isa Vector]
+  data end
+
+clone(data, src=[]) = DATA( vcat([data.cols.name],src) )
+
+function inc!(data::Tuple, v::Vector)
+  if data.cols == nothing 
+    data.cols=COLS(v) 
+  else
+    [inc!(col,x) for (col,x) in zip(data.cols.all,v)]
+    push!(row, data.rows) end end
+
 function dist(i::Dict, x, y)  
   (x=="?" && y=="?") ? 1 : (x==y ? 1 : 0) end
 
 function dist(i::Vector,x,y) 
-  if (x=="?" && y=="?") 1 else
+  if (:x=="?" && y=="?") 1 else
     x,y = norm(i,x), norm(i,y)
     if x=="?" x = (y < .5 ? 1 : 0) end
     if y=="?" y = (x < .5 ? 1 : 0) end 
     abs(x - y) end end
-
-BOX = MutableNamedTuples
-
-aaa(i::Tuple) = 1
 
 #---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- -----------
 BIG = 1E30
@@ -75,9 +94,33 @@ function ranf(nlo=0, nhi=1)
   global rseed = (16807 * rseed) % 214748347 
   nlo + (nhi - nlo) * rseed / 214748347 end
 
-function csv(sfile,fun)
+function csv(sfile, fun)
   src = open(sfile)
   while ! eof(src)
     new = replace(readline(src), r"([ \t\n]|#.*)"=>"")
     if sizeof(new) != 0
       fun(map(coerce,split(new,","))) end end end
+
+function cli(d)
+  tmp = Dict()
+  for (k,v) in pairs(d) 
+    s=String(k)
+    tmp[k] = v
+    for (i,flag) in enumerate(ARGS)
+      if (flag=="-"*s[1] || flag=="--"*s)
+        tmp[k] = s==true ? false : (s==false ? true : coerce(ARGS[i+1]))  end end end
+  MutableNamedTuple(;tmp...) end
+
+eg_settings() = println(the)
+eg_csv() = csv(the.file, (r) -> println(r))
+
+tests = Dict(
+  "settings" => eg_settings, 
+  "csv"      => eg_csv
+)
+#-----------------------------------------------
+if abspath(PROGRAM_FILE) == @__FILE__
+  the = cli(the)
+  for arg in ARGS
+    for (s,fun) in tests 
+      if arg == split(s)[1] fun() end end end end 
