@@ -32,10 +32,12 @@ mid(v::Vector) = per(v, .5)
 mid(d::Dict)   = findmax(d)[2]
 
 div(v::Vector) = (per(v, .9) - per(v, .1))/2.46
-div(d::Dict)   = entropy(d) 
+div(d::Dict)   =  begin
+  N = sum((n for (_,n) in d))
+  -sum(n/N*log2(n/N) for (_,n) in d if n>0) end
 
-norm(v::Vector, x) =  (x - v[1]) / (v[end] - v[1] + 1/BIG)
-norm(_d::Dict,  x) = x
+norm(v::Vector, n::Number) =  (x - v[1]) / (v[end] - v[1] + 1/BIG)
+norm(_, x) = x
 
 dist(d::Dict,  x,y) = (x=="?" && y=="?") ? 1 : (x==y ? 1 : 0)  
 dist(v::Vector,x,y) = begin
@@ -62,7 +64,7 @@ COLS(v::Vector{String}) = begin
     if s[end] != "X" 
       if s[end]=="!" klass=col end
       (occursin(s[end],"!+-") ? y : x)[n] = col end end
-  box(is=COLS, all=all, x=x, y=y, names=v) end
+  box(all=all, x=x, y=y, names=v) end
  
 clone(data, src=[]) = DATA( vcat([data.cols.name],src) )
 
@@ -74,11 +76,7 @@ any(v::Vector)         = v[ rani(1,length(v))  ]
 many(v::Vector,n::Int) = [any(v)  for _ in 1:n]
 
 per(v::Vector,p=.5) = v[ max(1, int(p*length(v)))]
-
-entropy(d::Dict) = begin
-  N = sum((n for (_,n) in d))
-  -sum(n/N*log2(n/N) for (_,n) in d if n>0) end
-
+ 
 rseed=the.seed
 rani(nlo, nhi)  = floor(Int, .5 + ranf(nlo,nhi))  
 ranf(nlo=0, nhi=1) = begin
@@ -112,7 +110,10 @@ egs = Dict(
 )
 #-----------------------------------------------
 if abspath(PROGRAM_FILE) == @__FILE__
-  the = cli(the)
+  defaults = cli(the)
   for arg in ARGS
     for (s,fun) in egs 
-      if arg == split(s)[1] fun() end end end end 
+      if arg == split(s)[1] 
+        the = defaults
+        reseed = the.seed
+        fun() end end end end 
