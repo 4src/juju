@@ -21,7 +21,7 @@ function coerce(x)
 
 the=(;Dict(Symbol(k) => coerce(v) for (k,v) in eachmatch(r"\n.*--(\S+)[^=]+= *(\S+)",help))...) 
 #---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- ----------  
-NAMES = julia
+NAMES = MutableNamedTuple
 
 function COL(i::String) occursin(r"^[A-Z]", i) ? [] : Dict() end
 
