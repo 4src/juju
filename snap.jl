@@ -25,9 +25,8 @@ box = MutableNamedTuple
 
 COL(s::String) = occursin(r"^[A-Z]", s) ? [] : Dict() 
 
-inc!(i,x)          = if x != "?" inc1!(i,x) end  
-inc1!(v::Vector,x) = push!(v,x)  
-inc1!(d::Dict,  x) = (d[x] = get(d,x,0) + 1) 
+inc1(v::Vector,x) = push!(v,x)  
+inc1(d::Dict,  x) = (d[x] = get(d,x,0) + 1) 
 
 mid(v::Vector) = per(v, .5)
 mid(d::Dict)   = findmax(d)[2]
@@ -35,8 +34,8 @@ mid(d::Dict)   = findmax(d)[2]
 div(v::Vector) = (per(v, .9) - per(v, .1))/2.46
 div(d::Dict)   = entropy(d) 
 
-norm(v::Vector, x) = x=="?" ? x : (x - v[1]) / (v[end] - v[1] + 1/BIG)
-norm(d::Dict,   x) = x
+norm(v::Vector, x) =  (x - v[1]) / (v[end] - v[1] + 1/BIG)
+norm(_d::Dict,  x) = x
 
 dist(d::Dict,  x,y) = (x=="?" && y=="?") ? 1 : (x==y ? 1 : 0)  
 dist(v::Vector,x,y) = begin
@@ -54,7 +53,7 @@ DATA(src) = begin
 
 data!(data, row) = begin
   if (data.cols==nothing) data.cols=COLS(row) else
-    [inc!(col,x) for (col,x) in zip(data.cols.all,row)]
+    [inc!(col,x) for (col,x) in zip(data.cols.all,row) if x != "?"]
     push!(row, data.rows) end end
 
 COLS(v::Vector{String}) = begin
