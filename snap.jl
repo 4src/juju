@@ -1,4 +1,3 @@
-using MutableNamedTuples
 help="
 tiny.jl: a fast way to find good options
 (c) Tim Menzies <timm@ieee.org>, BSD-2 license
@@ -15,14 +14,9 @@ OPTIONS:
   -r --reuse  do npt reuse parent node = true
   -s --seed   random number seed       = 937162211"
 
-make(x) = begin
-  for thing in [Int32,Float64,Bool] if ((y=tryparse(thing,x)) != nothing) return y end end 
-  x end
 
-the=(;Dict(Symbol(k) => make(v) for (k,v) in eachmatch(r"\n.*--(\S+)[^=]+= *(\S+)",help))...) 
+
 #---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- ----------  
-box = MutableNamedTuple
-
 COL(s::String) = occursin(r"^[A-Z]", s) ? [] : Dict() 
 
 inc1(v::Vector,x) = push!(v,x)  
@@ -33,8 +27,8 @@ mid(d::Dict)   = findmax(d)[2]
 
 div(v::Vector) = (per(v, .9) - per(v, .1))/2.46
 div(d::Dict)   = begin
-  N = sum(n             for (_,n) in d if n>0)
-  - sum(  n/N*log2(n/N) for (_,n) in d if n>0) end
+  N = sum(n for (_,n) in d if n>0)
+  - sum(n/N*log2(n/N) for (_,n) in d if n>0) end
 
 norm(v::Vector, n::Number) =  (x - v[1]) / (v[end] - v[1] + 1/BIG)
 norm(_, x) = x
@@ -47,28 +41,38 @@ dist(v::Vector,x,y) = begin
     if y=="?" y = (x < .5 ? 1 : 0) end 
     abs(x - y) end end
 
-DATA(src) = begin
-  data = box(rows=[], cols=nothing)
-  src isa String ? csv(src, row -> data!(data,row)) : [data!(data,row) for row in src]  
-  [sort(col) for col in data.cols.all if col isa Vector]
-  data end
+#---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- ----------  
+@kwdef mutable struct Data rows=[]; cols=nothing end
+@kwdef mutable struct Cols klass=nothing; all=[]; x=Dict(); y=Dict(); names=[] end  
 
-data!(data, row) = begin
-  if (data.cols==nothing) data.cols=COLS(row) else
-    [inc!(col,x) for (col,x) in zip(data.cols.all,row) if x != "?"]
-    push!(row, data.rows) end end
+DATA(src) = begin
+  data1 = Data()
+  src isa String ? csv(src, row -> data!(data1,row)) : [data!(data1,row) for row in src]  
+  [sort(col) for col in data1.cols.all if col isa Vector]
+  data1 end
+
+data!(data1::Data, row) = begin
+  if (data1.cols==nothing) data1.cols = COLS(row) else
+    [inc!(col,x) for (col,x) in zip(data1.cols.all,row) if x != "?"]
+    push!(row, data1.rows) end end
 
 COLS(v::Vector{String}) = begin
-  klass, x, y, all = nothing, Dict(), Dict(), [COL(s) for s in v]
-  for (n,(s,col)) in enumerate(zip(v,all))
+  cols1 = Cols(names=v, all= [COL(s) for s in v])
+  for (n,(s,col)) in enumerate(zip(v,cols1.all))
     if s[end] != "X" 
       if s[end]=="!" klass=col end
-      (occursin(s[end],"!+-") ? y : x)[n] = col end end
-  box(all=all, x=x, y=y, names=v) end
+      (occursin(s[end],"!+-") ? cols1.y : cols1.x)[n] = col end end  
+  cols1 end
  
-clone(data, src=[]) = DATA( vcat([data.cols.name],src) )
+clone(data1::Data, src=[]) = DATA( vcat([data1.cols.name],src) )
 
 #---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- -----------
+make(x) = begin
+  for thing in [Int32,Float64,Bool] if ((y=tryparse(thing,x)) != nothing) return y end end 
+  x end
+
+the=(;Dict(Symbol(k) => make(v) for (k,v) in eachmatch(r"\n.*--(\S+)[^=]+= *(\S+)",help))...)  
+
 BIG = 1E30
 
 int(n::Number)         = floor(Int,n)
@@ -76,29 +80,29 @@ any(v::Vector)         = v[ rani(1,length(v))  ]
 many(v::Vector,n::Int) = [any(v)  for _ in 1:n]
 
 per(v::Vector,p=.5) = v[ max(1, int(p*length(v)))]
- 
-rseed=the.seed
-rani(nlo, nhi)  = floor(Int, .5 + ranf(nlo,nhi))  
-ranf(nlo=0, nhi=1) = begin
-  global rseed = (16807 * rseed) % 214748347 
-  nlo + (nhi - nlo) * rseed / 214748347 end
 
- csv(sfile, fun) = begin
+rseed=the.seed
+rani(lo::Int, hi::Int)  = floor(Int, .5 + ranf(lo,hi))  
+ranf(lo=0.0, hi=1.0) = begin
+  global rseed = (16807 * rseed) % 214748347 
+  lo + (hi - lo) * rseed / 214748347 end
+
+csv(sfile::String, fun::Function) = begin
   src = open(sfile)
   while ! eof(src)
     new = replace(readline(src), r"([ \t\n]|#.*)"=>"")
     if sizeof(new) != 0
       fun(map(coerce,split(new,","))) end end end
 
-cli(t) = begin
+cli(settings::NamedTuple) = begin
   tmp = Dict()
-  for (k,v) in pairs(t) 
-    s=String(k)
+  for (k,v) in pairs(settings) 
+    s = String(k)
     tmp[k] = v
     for (i,flag) in enumerate(ARGS)
       if (flag=="-"*s[1] || flag=="--"*s)
         tmp[k] = s==true ? false : (s==false ? true : coerce(ARGS[i+1]))  end end end
-  box(;tmp...) end
+  (;tmp...) end
 
 #-----------------------------------------------
 eg_settings() = println(the)
@@ -109,6 +113,7 @@ egs = Dict(
   "csv"      => eg_csv
 )
 #-----------------------------------------------
+
 if abspath(PROGRAM_FILE) == @__FILE__
   defaults = cli(the)
   for arg in ARGS
