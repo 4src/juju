@@ -32,14 +32,14 @@ mid(v::Vector) = per(v, .5)
 mid(d::Dict)   = findmax(d)[2]
 
 div(v::Vector) = (per(v, .9) - per(v, .1))/2.46
-div(d::Dict)   =  begin
-  N = sum((n for (_,n) in d))
-  -sum(n/N*log2(n/N) for (_,n) in d if n>0) end
+div(d::Dict)   = begin
+  N = sum(n             for (_,n) in d if n>0)
+  - sum(  n/N*log2(n/N) for (_,n) in d if n>0) end
 
 norm(v::Vector, n::Number) =  (x - v[1]) / (v[end] - v[1] + 1/BIG)
 norm(_, x) = x
 
-dist(d::Dict,  x,y) = (x=="?" && y=="?") ? 1 : (x==y ? 1 : 0)  
+dist(d::Dict,  x,y) = (x=="?" && y=="?") ? 1 : (x==y ? 0 : 1)  
 dist(v::Vector,x,y) = begin
   if (x=="?" && y=="?") 1 else
     x,y = norm(v,x), norm(v,y)
@@ -114,6 +114,6 @@ if abspath(PROGRAM_FILE) == @__FILE__
   for arg in ARGS
     for (s,fun) in egs 
       if arg == split(s)[1] 
-        the = defaults
+        global the = defaults
         reseed = the.seed
         fun() end end end end 
