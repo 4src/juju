@@ -99,23 +99,22 @@ cli(settings::NamedTuple) = begin
         tmp[k] = s==true ? false : (s==false ? true : make(ARGS[argv+1])) end end end
   (;tmp...) end
 
-#-----------------------------------------------
+run(the) = begin
+  global the = cli(the)
+  b4 = deepcopy(the) 
+  for arg in ARGS
+    for (s,fun) in egs 
+      if arg == split(s)[1]  
+        for (k,v) in pairs(b4) the[k] = v end
+        reseed = the.seed
+        fun() end end end end 
+#---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- ----------
 eg_settings() = println(the)
-eg_csv() = csv(the.file, (r) -> println(r))
+eg_csv()      = csv(the.file, (r) -> println(r))
 
 egs = Dict(
   "settings" => eg_settings, 
   "csv"      => eg_csv
 )
-#-----------------------------------------------
-
-if abspath(PROGRAM_FILE) == @__FILE__
-  defaults = cli(the)
-  println(defaults)
-  for arg in ARGS
-    for (s,fun) in egs 
-      if arg == split(s)[1] 
-        global the = defaults
-       
-        reseed = the.seed
-        fun() end end end end 
+#---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- ----------
+if (abspath(PROGRAM_FILE) == @__FILE__) run(the) end
