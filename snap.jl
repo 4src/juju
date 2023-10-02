@@ -147,8 +147,7 @@ eg("num  \t: print nums", () -> begin
   v=[]
   inc!(v, [normal(10,2) for _ in 1:1000])
   sort!(v)
-  println(9.8 < mid(v) < 10.2)
-  println(1.85 < div(v) < 2.15) end)
+  9.8 < mid(v) < 10.2 and  1.85 < div(v) < 2.15 end)
 
 #---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- ----------
 if (abspath(PROGRAM_FILE) == @__FILE__) runs() end
