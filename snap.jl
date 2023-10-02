@@ -16,8 +16,10 @@ OPTIONS:
 #---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- ----------  
 COL(s::String) = occursin(r"^[A-Z]", s) ? [] : Dict() 
 
-inc1(v::Vector,x::Number) = push!(v,x)  
-inc1(d::Dict,  x) = d[x] = get(d,x,0) + 1  
+inc!(x, v::Vector) = begin [inc!(x,y) for y in v]; x end
+
+inc!(v::Vector,x::Number) = push!(v,x)  
+inc!(d::Dict,  x) = d[x] = get(d,x,0) + 1  
 
 mid(v::Vector) = per(v, .5)
 mid(d::Dict)   = findmax(d)[2]
@@ -121,15 +123,30 @@ run(s,fun) = begin
  
 #---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- ----------
 EGS = Dict(
-  "sets\t: show the settings"      => () -> println(the),  
-  "csv \t: print rows in csv file" => () -> csv(the.file, (r) -> println(r)),
+  "sets\t: show the settings"  => () -> 
+    println(the),  
+
+  "csv \t: print rows in csv file" => () -> 
+    csv(the.file, (r) -> println(r)),
+
   "rani \t: print random ints" => () ->  
-        begin global rseed=1; print(    rani(1,10)," ",rani(1,10))
-                     rseed=1; print(" ",rani(1,10)," ",rani(1,10)) end,
+    begin global rseed=1; print(    rani(1,10)," ",rani(1,10))
+                  rseed=1; println(" ",rani(1,10)," ",rani(1,10)) end,
+
   "ranf \t: print random floats" => () ->  
-        begin global rseed=1; print(    ranf()," ",ranf())
-                     rseed=1; print(" ",ranf()," ",ranf()) end,
-  "many \t: print random items" => () ->  print(many([10,20,30],4))
-)
+    begin global rseed=1; print(    ranf()," ",ranf())
+                  rseed=1; println(" ",ranf()," ",ranf()) end,
+
+  "many \t: print random items" => () ->  
+    println(many([10,20,30],4)),
+
+  "num  \t: print nums"=> () -> begin
+    v=[]
+    inc!(v, [normal(10,2) for _ in 1:1000])
+    sort!(v)
+    println(9.8 < mid(v) < 10.2)
+    println(1.85 < div(v) < 2.15)
+ end
+) 
 #---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- ----------
 if (abspath(PROGRAM_FILE) == @__FILE__) runs() end
