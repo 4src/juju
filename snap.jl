@@ -14,7 +14,7 @@ OPTIONS:
   -r --reuse  do npt reuse parent node = true
   -s --seed   random number seed       = 937162211"
 #---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- ----------  
-COL(s::String) = occursin(r"^[A-Z]", s) ? [] : Dict() 
+COL(s) = occursin(r"^[A-Z]", s) ? [] : Dict() 
 
 incs!(x, v::Vector)       = begin  [inc!(x,y) for y in v]; x end
 
@@ -42,17 +42,26 @@ dist(v::Vector,x,y) = begin
 
 #---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- ----------  
 @kwdef mutable struct Data rows=[]; cols=nothing end
-@kwdef mutable struct Cols klass=nothing; all=[]; x=Dict(); y=Dict(); names=[] end  
 
 DATA(src) = begin
-  dt = Data()
-  src isa String ? csv(src, row -> data!(dt,row)) : [data!(dt,row) for row in src]  
+  dt = Data() 
+  src isa Vector ? [data!(dt,row) for row in src] : csv(src, row -> data!(dt,row))  
   [sort!(col) for col in dt.cols.all if col isa Vector]
   dt end
 
-data!(dt::Data, row::Vector) = dt.cols ? push!(cols!(dt.cols,row), dt.rows) : dt.cols = COLS(row)  
+data!(dt::Data, row::Vector) = 
+  dt.cols==nothing ?  dt.cols = COLS(row) : push!( dt.rows, cols!(dt.cols,row))  
 
-COLS(v::Vector{String}) = begin
+clone(dt::Data, src=[]) = DATA( vcat([dt.cols.name],src) )
+
+stats(dt::Data, cols=nothing, want=mid, digits=2) =
+  merge(Dict("N"=> length(dt.rows)), 
+        Dict(dt.cols.names[n] => round(want(col), sigdigits=digits)
+             for (n,col) in (cols==nothing ? dt.cols.y : cols)))
+
+#---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- 
+@kwdef mutable struct Cols klass=nothing; all=[]; x=Dict(); y=Dict(); names=[] end  
+COLS(v::Vector) = begin
   cl = Cols(names=v, all= [COL(s) for s in v])
   for (n,(s,col)) in enumerate(zip(v,cl.all))
     if s[end] != "X" 
@@ -63,8 +72,6 @@ COLS(v::Vector{String}) = begin
 cols!(cl::Cols, row::Vector) = begin
   [inc!(col,x) for (col,x) in zip(cl.all,row) if x != "?"]
   row end
-  
-clone(data1::Data, src=[]) = DATA( vcat([data1.cols.name],src) )
 
 #---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- ----------
 normal(mu,sd)          = mu + sd*sqrt(-2*log(ranf())) * cos(2*π*ranf())
@@ -154,5 +161,7 @@ eg("sym   : print syms", () -> begin
   incs!(d, [c for c in "aaaabbc"])
   return 'a'==mid(d) && 1.37 < div(d) < 1.38  end)
 
+eg("data   : print data", () ->  print(stats(DATA(the.file))))
+ 
 #---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- ----------
 if (abspath(PROGRAM_FILE) == @__FILE__) runs() end
