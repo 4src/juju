@@ -16,9 +16,9 @@ OPTIONS:
 #---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- ----------  
 COL(s::String) = occursin(r"^[A-Z]", s) ? [] : Dict() 
 
-inc!(x, v::Vector)        = begin [inc!(x,y) for y in v]; x end
+incs!(x, v::Vector)        = begin  [inc!(x,y) for y in v]; x end
 inc!(v::Vector,x::Number) = push!(v,x)  
-inc!(d::Dict,  x)         = d[x] = get(d,x,0) + 1  
+inc!(d::Dict,  x)         = begin d[x] = get(d,x,0) + 1  end
 
 mid(v::Vector) = per(v, .5)
 mid(d::Dict)   = findmax(d)[2]
@@ -44,24 +44,25 @@ dist(v::Vector,x,y) = begin
 @kwdef mutable struct Cols klass=nothing; all=[]; x=Dict(); y=Dict(); names=[] end  
 
 DATA(src) = begin
-  data0 = Data()
-  src isa String ? csv(src, row -> data!(data0,row)) : [data!(data0,row) for row in src]  
-  [sort!(col) for col in data0.cols.all if col isa Vector]
-  data0 end
+  dt = Data()
+  src isa String ? csv(src, row -> data!(dt,row)) : [data!(dt,row) for row in src]  
+  [sort!(col) for col in dt.cols.all if col isa Vector]
+  dt end
 
-data!(data1::Data, row::Vector) = begin
-  if (data1.cols==nothing) data1.cols = COLS(row) else
-    [inc!(col,x) for (col,x) in zip(data1.cols.all,row) if x != "?"]
-    push!(row, data1.rows) end end
+data!(dt::Data, row::Vector) = dt.cols ? push!(cols!(dt.cols,row), dt.rows) : dt.cols = COLS(row)  
 
 COLS(v::Vector{String}) = begin
-  cols0 = Cols(names=v, all= [COL(s) for s in v])
-  for (n,(s,col)) in enumerate(zip(v,cols0.all))
+  cl = Cols(names=v, all= [COL(s) for s in v])
+  for (n,(s,col)) in enumerate(zip(v,cl.all))
     if s[end] != "X" 
       if s[end] == "!" klass=col end
-      (occursin(s[end],"!+-") ? cols0.y : cols1.x)[n] = col end end  
-  cols0 end
- 
+      (occursin(s[end],"!+-") ? cl.y : cl.x)[n] = col end end  
+  cl end
+
+cols!(cl::Cols, row::Vector) = begin
+  [inc!(col,x) for (col,x) in zip(cl.all,row) if x != "?"]
+  row end
+  
 clone(data1::Data, src=[]) = DATA( vcat([data1.cols.name],src) )
 
 #---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- ----------
@@ -143,9 +144,14 @@ eg("many  : print random items",  () ->
 
 eg("num   : print nums", () -> begin
   v=[]
-  inc!(v, [normal(10,2) for _ in 1:1000])
+  incs!(v, [normal(10,2) for _ in 1:1000])
   sort!(v)
   9.8 < mid(v) < 10.2 && 1.85 < div(v) < 2.15 end)
+
+eg("sym   : print syms", () -> begin
+  d = Dict() 
+  incs!(d, [c for c in "aaaabbc"])
+  return 'a'==mid(d) && 1.37 < div(d) < 1.38  end)
 
 #---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- ----------
 if (abspath(PROGRAM_FILE) == @__FILE__) runs() end
