@@ -18,3 +18,18 @@ julia:
 
 packages: ## install julia packages:
 	julia -e 'using Pkg; Pkg.add("Parameters"); Pkg.add("ResumableFunctions")'
+
+%.ps : %.jl
+	@mkdir -p ~/tmp
+	@echo "ps-ing $1 ... "
+	@a2ps                          \
+		-BR                          \
+		--chars-per-line 105          \
+		--file-align=fill              \
+		--line-numbers=1                \
+		--borders=no                     \
+		--pro=color                       \
+		--columns  2                       \
+		-M letter                           \
+		--pretty-print="jl.ssh"              \
+		-o $@ $^
