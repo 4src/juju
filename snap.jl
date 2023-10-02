@@ -113,6 +113,7 @@ runs() = begin
   else
     [run(s,fun) for arg in ARGS for (s,fun) in EGS if arg == split(s)[1]] end end
     
+"adasssd"
 run(s,fun) = begin
   global the
   b4 = deepcopy(the) 
@@ -121,13 +122,12 @@ run(s,fun) = begin
   the = deepcopy(b4)
   out end
  
+print(Docs.doc(run)) 
 #---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- ----------
 EGS = Dict(
-  "sets\t: show the settings"  => () -> 
-    println(the),  
+  "sets\t: show the settings"  => () -> println(the),  
 
-  "csv \t: print rows in csv file" => () -> 
-    csv(the.file, (r) -> println(r)),
+  "csv \t: print rows in csv file" => () -> csv(the.file, (r) -> println(r)),
 
   "rani \t: print random ints" => () ->  
     begin global rseed=1; print(    rani(1,10)," ",rani(1,10))
@@ -137,8 +137,7 @@ EGS = Dict(
     begin global rseed=1; print(    ranf()," ",ranf())
                   rseed=1; println(" ",ranf()," ",ranf()) end,
 
-  "many \t: print random items" => () ->  
-    println(many([10,20,30],4)),
+  "many \t: print random items" => () ->  println(many([10,20,30],4)),
 
   "num  \t: print nums"=> () -> begin
     v=[]
