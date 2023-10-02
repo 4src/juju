@@ -16,9 +16,10 @@ OPTIONS:
 #---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- ----------  
 COL(s::String) = occursin(r"^[A-Z]", s) ? [] : Dict() 
 
-incs!(x, v::Vector)        = begin  [inc!(x,y) for y in v]; x end
+incs!(x, v::Vector)       = begin  [inc!(x,y) for y in v]; x end
+
 inc!(v::Vector,x::Number) = push!(v,x)  
-inc!(d::Dict,  x)         = begin d[x] = get(d,x,0) + 1  end
+inc!(d::Dict,  x)         = d[x] = get(d,x,0) + 1 
 
 mid(v::Vector) = per(v, .5)
 mid(d::Dict)   = findmax(d)[2]
