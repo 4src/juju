@@ -7,7 +7,7 @@ OPTIONS:
   -C --Cohen  too small                = .35
   -f --file   csv data file            = ../data/auto93.csv
   -F --Far    how far to look          = .95
-  -h --help   show help                = False
+  -h --help   show help                = false
   -H --Half   where to find for far    = 256
   -m --min    min size                 = .5
   -p --p      distance coefficient     = 2
@@ -101,11 +101,14 @@ cli(settings::NamedTuple) = begin
 
 run(the) = begin
   global the = cli(the)
+  return 1
+  print(the)
+  print(1) 
   b4 = deepcopy(the) 
   for arg in ARGS
     for (s,fun) in egs 
       if arg == split(s)[1]  
-        for (k,v) in pairs(b4) the[k] = v end
+        the = (;(k=>v for (k,v) in pairs(the))...)
         reseed = the.seed
         fun() end end end end 
 #---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- ----------
