@@ -104,16 +104,19 @@ cli(settings::NamedTuple) = begin
         tmp[k] = v==true ? false : (v==false ? true : make(ARGS[argv+1])) end end end
   (;tmp...) end
 
+#---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- ----------
+@kwdef mutable struct Egs names=[]; funs=Dict() end
+EGS=Egs()
+eg(s,fun) = begin push!(EGS.names,s); EGS.funs[s] = fun end
+
 runs() = begin
   global the = cli(the)
   if (the.help) 
     println(about,"\n\n","ACTIONS") 
-    for (s,_) in EGS println("   julia snap.jl $s") end
-    exit(0)
+    for s in EGS.names println("   julia snap.jl $s") end
   else
-    [run(s,fun) for arg in ARGS for (s,fun) in EGS if arg == split(s)[1]] end end
+    [run(s,EGS.funs[s]) for arg in ARGS for s in EGS.names if arg == split(s)[1]] end end
     
-"adasssd"
 run(s,fun) = begin
   global the
   b4 = deepcopy(the) 
@@ -121,31 +124,31 @@ run(s,fun) = begin
   if (out = fun() == false) println("❌  FAIL : $s") end
   the = deepcopy(b4)
   out end
- 
-print(Docs.doc(run)) 
+
 #---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- ----------
-EGS = Dict(
-  "sets\t: show the settings"  => () -> println(the),  
+eg("sets\t: show the settings",  () -> 
+  println(the)) 
 
-  "csv \t: print rows in csv file" => () -> csv(the.file, (r) -> println(r)),
+eg("csv \t: print rows in csv file", () -> 
+  csv(the.file, (r) -> println(r)))
 
-  "rani \t: print random ints" => () ->  
-    begin global rseed=1; print(    rani(1,10)," ",rani(1,10))
-                  rseed=1; println(" ",rani(1,10)," ",rani(1,10)) end,
+eg("rani \t: print random ints", () ->  begin
+  global rseed=1; print(    rani(1,10)," ",rani(1,10))
+         rseed=1; println(" ",rani(1,10)," ",rani(1,10)) end)
 
-  "ranf \t: print random floats" => () ->  
-    begin global rseed=1; print(    ranf()," ",ranf())
-                  rseed=1; println(" ",ranf()," ",ranf()) end,
+eg("ranf \t: print random floats", () ->  begin
+  global rseed=1; print(    ranf()," ",ranf())
+         rseed=1; println(" ",ranf()," ",ranf()) end)
 
-  "many \t: print random items" => () ->  println(many([10,20,30],4)),
+eg("many \t: print random items",  () ->  
+  println(many([10,20,30],4)))
 
-  "num  \t: print nums"=> () -> begin
-    v=[]
-    inc!(v, [normal(10,2) for _ in 1:1000])
-    sort!(v)
-    println(9.8 < mid(v) < 10.2)
-    println(1.85 < div(v) < 2.15)
- end
-) 
+eg("num  \t: print nums", () -> begin
+  v=[]
+  inc!(v, [normal(10,2) for _ in 1:1000])
+  sort!(v)
+  println(9.8 < mid(v) < 10.2)
+  println(1.85 < div(v) < 2.15) end)
+
 #---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- ----------
 if (abspath(PROGRAM_FILE) == @__FILE__) runs() end
