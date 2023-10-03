@@ -88,8 +88,6 @@ dist(dt::Data, row1,row2) = begin
     d += dist(col, row1[n], row2[n]) ^ the.p
     m += 1 end
   (d/m) ^ (1/the.p) end
-     
-
 
 #---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- ----------
 normal(mu,sd)          = mu + sd*sqrt(-2*log(ranf())) * cos(2*π*ranf())
@@ -190,9 +188,9 @@ eg("order  : print order", () -> begin
    rows = sort(d.rows, by=row -> d2h(d,row)) 
    n    = length(rows)
    m    = int(n ^ .5)
-   println(stats(clone(d,rows[1:m])))
-   println(stats(clone(d,rows[n-m:n]))) end)
-
+   println("baseline ", stats(d))
+   println("best     ",stats(clone(d,rows[1:m+1])))
+   println("rest     ",stats(clone(d,rows[n-m:n]))) end)
  
 #---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- ----------
 if (abspath(PROGRAM_FILE) == @__FILE__) runs() end
