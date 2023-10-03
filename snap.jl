@@ -40,6 +40,20 @@ dist(v::Vector,x,y) = begin
     if y=="?" y = (x < .5 ? 1 : 0) end 
     abs(x - y) end end
 
+#---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- 
+@kwdef mutable struct Cols klass=nothing; all=[]; x=Dict(); y=Dict(); names=[] end  
+COLS(v::Vector) = begin
+  cl = Cols(names=v, all= [COL(s) for s in v])
+  for (n,(s,col)) in enumerate(zip(v,cl.all))
+    if s[end] != "X" 
+      if s[end] == "!" klass=col end
+      (occursin(s[end],"!+-") ? cl.y : cl.x)[n] = col end end  
+  cl end
+
+cols!(cl::Cols, row::Vector) = begin
+  [inc!(col,x) for (col,x) in zip(cl.all,row) if x != "?"]
+  row end
+  
 #---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- ----------  
 @kwdef mutable struct Data rows=[]; cols=nothing end
 
@@ -75,19 +89,7 @@ dist(dt::Data, row1,row2) = begin
     n += 1 end
   (d/n) ^ (1/the.p) end
      
-#---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- 
-@kwdef mutable struct Cols klass=nothing; all=[]; x=Dict(); y=Dict(); names=[] end  
-COLS(v::Vector) = begin
-  cl = Cols(names=v, all= [COL(s) for s in v])
-  for (n,(s,col)) in enumerate(zip(v,cl.all))
-    if s[end] != "X" 
-      if s[end] == "!" klass=col end
-      (occursin(s[end],"!+-") ? cl.y : cl.x)[n] = col end end  
-  cl end
 
-cols!(cl::Cols, row::Vector) = begin
-  [inc!(col,x) for (col,x) in zip(cl.all,row) if x != "?"]
-  row end
 
 #---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- ----------
 normal(mu,sd)          = mu + sd*sqrt(-2*log(ranf())) * cos(2*π*ranf())
