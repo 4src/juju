@@ -90,7 +90,7 @@ dist(dt::Data, row1,row2) = begin
   (d/m) ^ (1/the.p) end
 
 around(dt::Data,row1,rows=nothing) = begin
-  rows=map(row2 -> (dist(dt,row1,row2), row2),rows == nothing ? dt.rows : rows)
+  rows = map(row2 -> (dist(dt,row1,row2), row2),rows == nothing ? dt.rows : rows)
   map(two -> two[2], sort(rows,  by= two -> two[1])) end 
 
 #---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- ----------
