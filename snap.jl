@@ -52,13 +52,29 @@ DATA(src) = begin
 data!(dt::Data, row::Vector) = 
   dt.cols==nothing ?  dt.cols = COLS(row) : push!( dt.rows, cols!(dt.cols,row))  
 
-clone(dt::Data, src=[]) = DATA( vcat([dt.cols.name],src) )
+clone(dt::Data, src=[]) = DATA( vcat([dt.cols.names],src) )
 
-stats(dt::Data, cols=nothing, want=mid, digits=2) =
-  merge(Dict("N"=> length(dt.rows)), 
-        Dict(dt.cols.names[n] => round(want(col), sigdigits=digits)
-             for (n,col) in (cols==nothing ? dt.cols.y : cols)))
+stats(dt::Data, cols=nothing, want=mid, digits=2) = begin
+  cols = cols==nothing ? dt.cols.y : cols
+  d = Dict("N"=> length(dt.rows))
+  for (n,col) in cols d[dt.cols.names[n]] = round(want(col), sigdigits=digits) end
+  d end 
 
+d2h(dt::Data, row) = begin
+  d = n = 0
+  for (n,col) in dt.cols.y
+    w  = dt.cols.names[n][end] == '-' ? 0 : 1
+    d += abs(w - norm(col, row[n])) ^ 2
+    n += 1 end
+  (d/n) ^ .5 end
+
+dist(dt::Data, row1,row2) = begin
+  d = n = 0
+  for (n,col) in dt.cols.x
+    d += dist(col, row1[n], row2[n]) ^ the.p
+    n += 1 end
+  (d/n) ^ (1/the.p) end
+     
 #---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- 
 @kwdef mutable struct Cols klass=nothing; all=[]; x=Dict(); y=Dict(); names=[] end  
 COLS(v::Vector) = begin
@@ -162,6 +178,14 @@ eg("sym   : print syms", () -> begin
   return 'a'==mid(d) && 1.37 < div(d) < 1.38  end)
 
 eg("data   : print data", () ->  print(stats(DATA(the.file))))
+
+eg("order  : print order", () -> begin
+   d    = DATA(the.file)
+   rows = sort(d.rows, by=row -> d2h(d,row)) 
+   n    = length(rows)
+   println(stats(clone(d,rows[1:20])))
+   println(stats(clone(d,rows[n-20:n]))) end)
+
  
 #---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- ----------
 if (abspath(PROGRAM_FILE) == @__FILE__) runs() end
