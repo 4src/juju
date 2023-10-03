@@ -92,14 +92,14 @@ dist(dt::Data, row1,row2) = begin
 around(dt::Data,row1,rows=nothing) = begin
   rows=map(row2 -> (dist(dt,row1,row2), row2),rows == nothing ? dt.rows : rows)
   map(two -> two[2], sort(rows,  by= two -> two[1])) end 
-  
+
 #---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- ----------
+rnd(x,n=3)             = round(x,sigdigits=n)
 normal(mu,sd)          = mu + sd*sqrt(-2*log(ranf())) * cos(2*π*ranf())
 int(n::Number)         = floor(Int,n)
 any(v::Vector)         = v[rani(1,length(v))]
 per(v::Vector,p=.5)    = v[ max(1, int(p*length(v)))]
 many(v::Vector,n::Int) = [any(v)  for _ in 1:n]
-rnd(x,n=3) = round(x,sigdigits=n)
 
 what(s) = begin
   for t in [Int32,Float64,Bool] if ((x=tryparse(t,s)) != nothing) return x end end 
