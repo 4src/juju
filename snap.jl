@@ -89,12 +89,17 @@ dist(dt::Data, row1,row2) = begin
     m += 1 end
   (d/m) ^ (1/the.p) end
 
+around(dt::Data,row1,rows=nothing) = begin
+  rows=map(row2 -> (dist(dt,row1,row2), row2),rows == nothing ? dt.rows : rows)
+  map(two -> two[2], sort(rows,  by= two -> two[1])) end 
+  
 #---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- ----------
 normal(mu,sd)          = mu + sd*sqrt(-2*log(ranf())) * cos(2*π*ranf())
 int(n::Number)         = floor(Int,n)
 any(v::Vector)         = v[rani(1,length(v))]
 per(v::Vector,p=.5)    = v[ max(1, int(p*length(v)))]
 many(v::Vector,n::Int) = [any(v)  for _ in 1:n]
+rnd(x,n=3) = round(x,sigdigits=n)
 
 what(s) = begin
   for t in [Int32,Float64,Bool] if ((x=tryparse(t,s)) != nothing) return x end end 
@@ -128,23 +133,24 @@ cli(d::Dict) = begin
 @kwdef mutable struct Egs names=[]; funs=Dict() end
 EGS=Egs()
 eg(s,fun) = begin push!(EGS.names,s); EGS.funs[s] = fun end
+go(arg)   = [run(s,EGS.funs[s]) for s in EGS.names if arg == split(s)[1]] 
 
-runs() = begin
-  global the = cli(the)
-  if the.help 
-    println(about,"\n\n","ACTIONS:") 
-    for s in EGS.names println("   julia snap.jl $s") end
-  else
-    [run(s,EGS.funs[s]) for arg in ARGS for s in EGS.names if arg == split(s)[1]] end end
-    
-run(s,fun) = begin
-  global the
+run(s,fun) = begin 
+  global the 
   b4 = deepcopy(the) 
   global rseed = the.seed
   if (out = fun() == false) println("❌ FAIL : $s") end
   the = deepcopy(b4)
   out end
 
+runs() = 
+  if the.help 
+    global the = cli(the)
+    println(about,"\n\n","ACTIONS:") 
+    for s in EGS.names println("   julia snap.jl $s") end 
+  else  
+   [go(arg) for arg in ARGS] end
+    
 #---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- ----------
 eg("boom  : test fail",  () -> 
   false)
@@ -180,17 +186,32 @@ eg("sym   : print syms", () -> begin
 eg("data   : print data", () ->  print(stats(DATA(the.file))))
 
 eg("d2h    : calculate distance to heaven",()-> begin
-  d = DATA(the.file) 
-  print(d2h(d,d.rows[1])) end)
+  dt = DATA(the.file) 
+  print(d2h(dt,dt.rows[1])) end)
 
 eg("order  : print order", () -> begin
-   d    = DATA(the.file) 
-   rows = sort(d.rows, by=row -> d2h(d,row)) 
+   dt    = DATA(the.file) 
+   rows = sort(dt.rows, by=row -> d2h(dt,row)) 
    n    = length(rows)
    m    = int(n ^ .5)
-   println("baseline ", stats(d))
-   println("best     ",stats(clone(d,rows[1:m+1])))
-   println("rest     ",stats(clone(d,rows[n-m:n]))) end)
- 
+   println("baseline ", stats(dt))
+   println("best     ",stats(clone(dt,rows[1:m+1])))
+   println("rest     ",stats(clone(dt,rows[n-m:n]))) end)
+
+eg("dist  : print dist", () -> begin
+   dt    = DATA(the.file) 
+   i=1
+   while i < length(dt.rows)
+    println(rnd(dist(dt, dt.rows[1], dt.rows[i])), "\t", dt.rows[i])
+    i += 60  end end)
+
+eg("around  : print around", () -> begin
+    dt    = DATA(the.file)  
+    rows= around(dt,dt.rows[1])
+    i=1
+    while i < length(rows)
+      println(rnd(dist(dt, dt.rows[1], rows[i])), "\t", rows[i])
+      i += 60  end end )
+
 #---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- ----------
 if (abspath(PROGRAM_FILE) == @__FILE__) runs() end
