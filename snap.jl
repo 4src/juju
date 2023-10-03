@@ -78,7 +78,7 @@ d2h(dt::Data, row) = begin
   d,m  = 0,0
   for (n,col) in dt.cols.y 
     w  = dt.cols.names[n][end] == '-' ? 0 : 1
-    d += abs(w - norm(col, row[n])) ^ 2 
+    d += (w - norm(col, row[n])) ^ 2 
     m += 1 end 
   (d/m) ^ .5 end
 
