@@ -75,19 +75,19 @@ stats(dt::Data, cols=nothing, want=mid, digits=2) = begin
   d end 
 
 d2h(dt::Data, row) = begin
-  d = n = 0
-  for (n,col) in dt.cols.y
+  d,m  = 0,0
+  for (n,col) in dt.cols.y 
     w  = dt.cols.names[n][end] == '-' ? 0 : 1
-    d += abs(w - norm(col, row[n])) ^ 2
-    n += 1 end
-  (d/n) ^ .5 end
+    d += abs(w - norm(col, row[n])) ^ 2 
+    m += 1 end 
+  (d/m) ^ .5 end
 
 dist(dt::Data, row1,row2) = begin
-  d = n = 0
+  d = m = 0
   for (n,col) in dt.cols.x
     d += dist(col, row1[n], row2[n]) ^ the.p
-    n += 1 end
-  (d/n) ^ (1/the.p) end
+    m += 1 end
+  (d/m) ^ (1/the.p) end
      
 
 
@@ -181,12 +181,17 @@ eg("sym   : print syms", () -> begin
 
 eg("data   : print data", () ->  print(stats(DATA(the.file))))
 
+eg("d2h    : calculate distance to heaven",()-> begin
+  d = DATA(the.file) 
+  print(d2h(d,d.rows[1])) end)
+
 eg("order  : print order", () -> begin
-   d    = DATA(the.file)
+   d    = DATA(the.file) 
    rows = sort(d.rows, by=row -> d2h(d,row)) 
    n    = length(rows)
-   println(stats(clone(d,rows[1:20])))
-   println(stats(clone(d,rows[n-20:n]))) end)
+   m    = int(n ^ .5)
+   println(stats(clone(d,rows[1:m])))
+   println(stats(clone(d,rows[n-m:n]))) end)
 
  
 #---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- ----------
