@@ -1,2 +1,11 @@
+#!/usr/bin/env bash 
 alias ,j="julia -O0 --compile=min --startup=no "
 alias ,g="git commit -am saving; git push; git status"
+
+jl2md() { gawk '
+  BEGIN {CODE=0}
+  sub(/^"/,"")  { if  (CODE) { CODE=0; print("```")} }
+  sub(/"$/,"")  { CODE=1; print($0 "\n\n```julia"); next}  
+  /^$/ && CODE  { CODE=0; print("```"); next}
+  1' $1
+}

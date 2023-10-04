@@ -1,5 +1,9 @@
-"config"
-about="
+config
+
+```julia
+about=
+
+```julia
 snap.jl: a fast way to find good options
 (c) Tim Menzies <timm@ieee.org>, BSD-2 license
      
@@ -13,14 +17,20 @@ OPTIONS:
   -m --min    min size                 = .5
   -p --p      distance coefficient     = 2
   -r --reuse  do npt reuse parent node = true
-  -s --seed   random number seed       = 937162211"
+  -s --seed   random number seed       = 937162211
 
-"Upper case swords denote numbers"
+```julia
+```
+Upper case swords denote numbers
+
+```julia
 COL(s) = occursin(r"^[A-Z]", s) ? [] : Dict() 
+```
+increment thing
 
-"increment thing"
+```julia
 incs!(x, v::Vector)       = begin  [inc!(x,y) for y in v]; x end
-
+```
 inc!(v::Vector,x::Number) = push!(v,x)  
 inc!(d::Dict,  x)         = d[x] = get(d,x,0) + 1 
 
