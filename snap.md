@@ -6,5 +6,5 @@ ccc: asdas
 # asdas dssaas
 
 ```julia <!--fred-->
-function asdas() return 2
+function asdas()  return occursin() 
 ```
