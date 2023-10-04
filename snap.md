@@ -5,6 +5,6 @@ ccc: asdas
 
 # asdasdssaas
 
-```julia --asdas
+```julia --fred
 function asdas() return 2
 ```
