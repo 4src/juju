@@ -58,7 +58,19 @@ COLS(v::Vector) = begin
 cols!(cl::Cols, row::Vector) = begin
   [inc!(col,x) for (col,x) in zip(cl.all,row) if x != "?"]
   row end
- 
+
+#---------- ---------- ---------- ---------- ---------- ---------- ----
+@kwdef mutable struct Row cells=[]; hidden={} end
+ROW(dt:data,v::Vector) = begin
+  cells=v 
+  for (n,_) in v
+    y = v[n]
+    row.cells[n] = "?"
+    rows.hidden[n] = y end end
+
+assess(row::Row)
+  for (n,v) in row.unseen 
+    row.cells[n] = v
 #---------- ---------- ---------- ---------- ---------- ---------- ----
 @kwdef mutable struct Data rows=[]; cols=nothing end
 
