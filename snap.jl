@@ -1,6 +1,6 @@
 ## fred
 about="
-snap.jl: a fast way to find good options
+snap.jl: a fast way to find good options 
 (c) Tim Menzies <timm@ieee.org>, BSD-2 license
      
 OPTIONS:

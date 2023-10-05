@@ -5,9 +5,8 @@ Title: asd as das dasd
 ## asdas dssaas
 
 ```julia <snap.jl fred>
-
 about="
-snap.jl: a fast way to find good options
+snap.jl: a fast way to find good options 
 (c) Tim Menzies <timm@ieee.org>, BSD-2 license
      
 OPTIONS:
@@ -21,16 +20,13 @@ OPTIONS:
   -p --p      distance coefficient     = 2
   -r --reuse  do npt reuse parent node = true
   -s --seed   random number seed       = 937162211"
- 
 ```
 
 <1> says
 
 ```julia <snap.jl words>
-
 "Upper case swords denote numbers"
-COL(s) = occursin(r"^[A-Z]", s) ? [] : Dict() 
- 
+COL(s) = occursin(r"^[A-Z]", s) ? [] : Dict()
 ```
 
 ## asdas 
