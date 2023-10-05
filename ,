@@ -5,18 +5,16 @@ alias ,g="git commit -am saving; git push; git status"
 jl2md() { gawk ' 
   function slurp(f,k) {
     if (! (f in TXT)) {
-      while((getline < f) > 0) {
-        if ($0 ~ /^##/) key=$2
-        TXT[f][k] = TXT[f][k] "\n" $0 }
+      while((getline  txt < f) > 0) { 
+        if (sub(/^## /,"",txt)) 
+           k=txt
+        else {TXT[f][k] = TXT[f][k] "\n"txt}}
       close(f) }
     return TXT[f][k] }
-  /^```julia/ { gsub(/[<>]/,"") 
-                print("[[" $2," ",$3, "]]")
-                print("```julia <"$2" "$3">")
+  /^```julia/ { gsub(/[<>]/,"")  
+                print("2```julia <"$2" "$3">")
                 print(slurp($2,$3))
-                print("```")
-                do
-                  next
-                while ($0 !~ /```$/) }
-              { print }' $1
+                print("3```")
+                do { next } while ($0 !~ /```$/) }
+              { print "1 "$0 }' $1
 }
