@@ -15,17 +15,14 @@ WHITE='\033[1;37m'
 ,help() { ## show avialable commands
   echo -e "${NO}${LIGHTCYAN}HELP:$OFF"
   gawk 'BEGIN{FS="[(][)][:space:]*[^#]+##[:space:]*"}
-            /^,/ && /##/  { printf("%10s :%s\n",$1,$2) }' , 
-}
+            /^,/ && /##/  { printf("%10s :%s\n",$1,$2) }' , ; }
 
 ,gp() { ## save all to git
-   git commit -am saving; git push; git status
-}
+   git commit -am saving; git push; git status; }
 
 ,julia() { ## run julia
    f=$1; shift
-   julia -O0 --compile=min --startup=no $1.jl $*
-}
+   julia -O0 --compile=min --startup=no $1.jl $*; }
 
 ,markdown() { ## insert snippets from julia code into markdown
   gawk ' 
@@ -42,5 +39,4 @@ WHITE='\033[1;37m'
           if (USED[k] != 1) {
              print("?? used "(USED[k]+0)" time(s) "k)>"/dev/stderr" }}
   ' PASS=1 *.jl PASS=2 $1 > _tmp
- mv _tmp $1
-}
+ mv _tmp $1 ; }
