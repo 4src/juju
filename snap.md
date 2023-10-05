@@ -26,11 +26,10 @@ OPTIONS:
 
 <1> says
 
-```julia <juju.jl word>
+```julia <snap.jl words>
 
-asdasasdd
-asdasasddas
-asdasasdd
+"Upper case swords denote numbers"
+COL(s) = occursin(r"^[A-Z]", s) ? [] : Dict() 
  
 ```
 
