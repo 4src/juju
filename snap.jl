@@ -1,4 +1,4 @@
-"config"
+## fred
 about="
 snap.jl: a fast way to find good options
 (c) Tim Menzies <timm@ieee.org>, BSD-2 license
@@ -15,20 +15,21 @@ OPTIONS:
   -r --reuse  do npt reuse parent node = true
   -s --seed   random number seed       = 937162211"
 
+## words
 "Upper case swords denote numbers"
 COL(s) = occursin(r"^[A-Z]", s) ? [] : Dict() 
 
-"increment thing"
+## inc
 incs!(x, v::Vector)       = begin  [inc!(x,y) for y in v]; x end
 
 inc!(v::Vector,x::Number) = push!(v,x)  
 inc!(d::Dict,  x)         = d[x] = get(d,x,0) + 1 
 
-mid(v::Vector) = per(v, .5)
-mid(d::Dict)   = findmax(d)[2]
+often(v::Vector) = per(v, .5)
+often(d::Dict)   = findmax(d)[2]
 
-div(v::Vector) = (per(v, .9) - per(v, .1))/2.56
-div(d::Dict)   = begin
+spread(v::Vector) = (per(v, .9) - per(v, .1))/2.56
+spread(d::Dict)   = begin
   N = sum(n for (_,n) in d if n>0)
   - sum(n/N*log2(n/N) for (_,n) in d if n>0) end
 
@@ -60,32 +61,32 @@ cols!(cl::Cols, row::Vector) = begin
   row end
 
 #---------- ---------- ---------- ---------- ---------- ---------- ----
-@kwdef mutable struct Row cells=[]; hidden={} end
+@kwdef mutable struct Row cells=[]; hidden=Dict() end
 ROW(dt:data,v::Vector) = begin
-  cells=v 
-  for (n,_) in v
-    y = v[n]
+  for (n,_) in dt.cols.y
     row.cells[n] = "?"
-    rows.hidden[n] = y end end
+    rows.hidden[n] = v[n]  end end
 
-assess(row::Row)
-  for (n,v) in row.unseen 
-    row.cells[n] = v
+score(row::Row) = begin
+  if rows.hidden != nothing
+    for (n,v) in row.hidden  row.cells[n] = v end
+    rows.hidden = nothing end
+  row end
 #---------- ---------- ---------- ---------- ---------- ---------- ----
 @kwdef mutable struct Data rows=[]; cols=nothing end
 
-DATA(src) = begin
+DATA(x) = begin
   dt = Data() 
-  src isa Vector ? [data!(dt,r) for r in src] : csv(src,r -> data!(dt,r))  
+  x isa Vector ? [data!(dt,r) for r in x] : csv(x,r -> data!(dt,ROW(r)))  
   [sort!(col) for col in dt.cols.all if col isa Vector]
   dt end
 
 data!(dt::Data, r::Vector) = 
-  dt.cols==nothing ?  dt.cols COLS(r) : push!(dt.rows, cols!(dt.cols,r))  
+  dt.cols==nothing ?  dt.cols=COLS(r) : push!(dt.rows, cols!(dt.cols,r))  
 
 clone(dt::Data, src=[]) = DATA( vcat([dt.cols.names],src) )
 
-stats(dt::Data, cols=nothing, want=mid, digits=2) = begin
+stats(dt::Data, cols=nothing, want=often, digits=2) = begin
   cols = cols==nothing ? dt.cols.y : cols
   d = Dict("N"=> length(dt.rows))
   for (n,col) in cols 
@@ -93,6 +94,7 @@ stats(dt::Data, cols=nothing, want=mid, digits=2) = begin
   d end 
 
 d2h(dt::Data, row) = begin
+  row = score(row)
   d,m  = 0,0
   for (n,col) in dt.cols.y 
     w  = dt.cols.names[n][end] == '-' ? 0 : 1
@@ -107,19 +109,24 @@ dist(dt::Data, row1,row2) = begin
     m += 1 end
   (d/m) ^ (1/the.p) end
 
+#---------- ---------- ---------- ---------- ---------- ---------- ----
 around(dt::Data,row1,rows) =  
-  decorate_sort_undecorate(rows, by = row2 -> dist(dt,row1,row2))
+  decorate_sort_undecorate(rows, row2 -> dist(dt,row1,row2))
 
 extremes(dt::Data,rows, x=nothing) = begin
-  far = int(the.Far * length(rows))
-  x   = x==nothing ? around(dt, any(row), rows)[far] : x
-  y   = around(dt, x, rows)[far]
+  faraway = int(the.Far * length(rows))
+  x   = x==nothing ? around(dt, any(row), rows)[faraway] : x
+  y   = around(dt, x, rows)[faraway]
   return x, y, dist(dt,x,y) end
 
-half(dt::Data, rows, above=nothing, above=nothing)
-
-halve(dt::Data,rows,above=nothing,sorted=false)
+half(dt::Data,rows,above=nothing,sorting=false) = begin
   a,b,C = extremes(dt,many(rows, min(the.Half, length(rows))))
+  if sorting and d2h(dt,b) < d2h(dt,a) a,b=b,a end
+  cos  = r->  (dist(dt,r,a)^2 + C^2 - dist(dt,r,b)^2) )/(2*c)
+  rows = decorate_sort_undecorate(rows,cos)
+  mid  = int(length(rows/2))
+  a,b,rows[1:mid],rows[mid+1:end] end
+
 #---------- ---------- ---------- ---------- ---------- ---------- ----
 rnd(x,n=3)             = round(x,sigdigits=n)
 normal(mu,sd)          = mu + sd*sqrt(-2*log(ranf())) * cos(2*π*ranf())
@@ -211,12 +218,12 @@ eg("num   : print nums", () -> begin
   v=[]
   incs!(v, [normal(10,2) for _ in 1:1000])
   sort!(v)
-  9.8 < mid(v) < 10.2 && 1.85 < div(v) < 2.15 end)
+  9.8 < often(v) < 10.2 && 1.85 < spread(v) < 2.15 end)
 
 eg("sym   : print syms", () -> begin
   d = Dict() 
   incs!(d, [c for c in "aaaabbc"])
-  return 'a'==mid(d) && 1.37 < div(d) < 1.38  end)
+  return 'a'==often(d) && 1.37 < spread(d) < 1.38  end)
 
 eg("data   : print data", () ->  print(stats(DATA(the.file))))
 
@@ -226,7 +233,7 @@ eg("d2h    : calculate distance to heaven",()-> begin
 
 eg("order  : print order", () -> begin
    dt    = DATA(the.file) 
-   rows = sort(dt.rows, by=row -> d2h(dt,row)) 
+   rows = sort(dt.rows, alg=InsertionSort), by=row -> d2h(dt,row)) 
    n    = length(rows)
    m    = int(n ^ .5)
    println("baseline ", stats(dt))

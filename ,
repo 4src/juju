@@ -2,10 +2,21 @@
 alias ,j="julia -O0 --compile=min --startup=no "
 alias ,g="git commit -am saving; git push; git status"
 
-jl2md() { gawk '
-  BEGIN {CODE=0}
-  sub(/^"/,"")  { if  (CODE) { CODE=0; print("```")} }
-  sub(/"$/,"")  { CODE=1; print($0 "\n\n```julia"); next}  
-  /^$/ && CODE  { CODE=0; print("```"); next}
-  1' $1
+jl2md() { gawk ' 
+  function slurp(f,k) {
+    if (! (f in TXT)) {
+      while((getline < f) > 0) {
+        if ($0 ~ /^##/) key=$2
+        TXT[f][k] = TXT[f][k] "\n" $0 }
+      close(f) }
+    return TXT[f][k] }
+  /^```julia/ { gsub(/[<>]/,"") 
+                print("[[" $2," ",$3, "]]")
+                print("```julia <"$2" "$3">")
+                print(slurp($2,$3))
+                print("```")
+                do
+                  next
+                while ($0 !~ /```$/) }
+              { print }' $1
 }
