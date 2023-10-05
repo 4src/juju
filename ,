@@ -3,18 +3,23 @@ alias ,j="julia -O0 --compile=min --startup=no "
 alias ,g="git commit -am saving; git push; git status"
 
 jl2md() { gawk ' 
-  function slurp(f,k) {
-    if (! (f in TXT)) {
-      while((getline  txt < f) > 0) { 
-        if (sub(/^## /,"",txt)) 
-           k=txt
-        else {TXT[f][k] = TXT[f][k] "\n"txt}}
-      close(f) }
-    return TXT[f][k] }
-  /^```julia/ { gsub(/[<>]/,"")  
-                print("2```julia <"$2" "$3">")
-                print(slurp($2,$3))
-                print("3```")
-                do { next } while ($0 !~ /```$/) }
-              { print "1 "$0 }' $1
+  function skip() {
+    while(getline >0)
+       if (/^```/) return 
+  }
+  PASS==1 && /^##/ {k=$2 ; next}
+  PASS==1          {TXT["<"FILENAME" "k">"] = TXT["<"FILENAME" "k">"] sep $0 ; sep="\n"}
+  PASS==2          {print}
+  PASS==2  && /^```julia/ {   
+                    print(TXT[$2" "$3],"\n```")
+                    USED[$2" "$3]++
+                    skip(); next;
+                    }
+  END { Head="\n\nWARNINGS:\n"
+        for(k in TXT)
+          if (USED[k] != 1) {
+             print(Head"\t "(USED[k]+0)" "k)>"/dev/stderr" 
+             Head=""}}
+ ' PASS=1 *.jl PASS=2 $1 > _tmp
+ mv _tmp $1
 }
