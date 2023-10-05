@@ -1,5 +1,4 @@
 #!/usr/bin/env bash 
-
 OFF='\033[0m'         ; RED='\033[0;31m'        ; GREEN='\033[0;32m'
 ORANGE='\033[0;33m'   ; BLUE='\033[0;34m'       ; PURPLE='\033[0;35m'
 CYAN='\033[0;36m'     ; LIGHTGRAY='\033[0;37m'  ; DARKGRAY='\033[1;30m'
@@ -9,34 +8,38 @@ WHITE='\033[1;37m'
 
 ,h() { ,help; }
 ,g() { ,gp; }
-,j() { ,julia; }
-,m() { ,markdown; }
+,j() { ,julia $*; }
+,m() { ,markdown $*; }
 
-,help() { ## show avialable commands
+,help() {     ## ,h          =  show help
+ 
   echo -e "${NO}${LIGHTCYAN}HELP:$OFF"
   gawk 'BEGIN{FS="[(][)][:space:]*[^#]+##[:space:]*"}
-            /^,/ && /##/  { printf("%10s :%s\n",$1,$2) }' , ; }
+            /^,/ && /##/  { printf("%-10s :%s\n",$1,$2) }' , ; }
 
-,gp() { ## save all to git
+,gp() {       ## ,g          =  commit all, push to github 
    git commit -am saving; git push; git status; }
 
-,julia() { ## run julia
+,julia() {    ## ,j file     =  run julia
    f=$1; shift
    julia -O0 --compile=min --startup=no $1.jl $*; }
 
-,markdown() { ## insert snippets from julia code into markdown
-  gawk ' 
-  function trim(s) { sub(/^[ \t\n]*/,"",s); sub(/[ \t\n]*$/,"",s); return s }
+,markdown() { ## ,m file.md  =  insert snippets from julia code into markdown
+  if [[ -f "$1" ]]
+  then
+    gawk ' 
+    function trim(s) { sub(/^[ \t\n]*/,"",s); sub(/[ \t\n]*$/,"",s); return s }
 
-  PASS==1 && /^##/ { k=$2">" ; next}
-  PASS==1 { CHUNK["<"FILENAME" "k] = CHUNK["<"FILENAME" "k] sep $0 ; sep="\n"}
-  PASS==2 { print }
-  PASS==2 && /```julia/ {    
-        print(trim(CHUNK[$2" "$3]),"\n```")
-        USED[$2" "$3]++
-        while(getline x >0) if (x ~ /^```/) break } 
-  END { for(k in CHUNK)
-          if (USED[k] != 1) {
-             print("?? used "(USED[k]+0)" time(s) "k)>"/dev/stderr" }}
-  ' PASS=1 *.jl PASS=2 $1 > _tmp
- mv _tmp $1 ; }
+    PASS==1 && /^##/ { k=$2">" ; next}
+    PASS==1 { SNIPPET["<"FILENAME" "k] = SNIPPET["<"FILENAME" "k] sep $0 ; sep="\n"}
+    PASS==2 { print }
+    PASS==2 && /```julia/ {    
+          print(trim(SNIPPET[$2" "$3]),"\n```")
+          USED[$2" "$3]++
+          while(getline x >0) if (x ~ /^```/) break } 
+    END { for(k in SNIPPET)
+            if (USED[k] != 1) {
+              print("?? used "(USED[k]+0)" time(s) "k)>"/dev/stderr" }}
+    ' PASS=1 *.jl PASS=2 $1 > _tmp
+  mv _tmp $1  
+ fi ; }
