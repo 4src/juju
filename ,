@@ -6,8 +6,13 @@ CYAN='\033[0;36m'     ; LIGHTGRAY='\033[0;37m'  ; DARKGRAY='\033[1;30m'
 LIGHTRED='\033[1;31m' ; LIGHTGREEN='\033[1;32m' ; YELLOW='\033[1;33m'
 LIGHTBLUE='\033[1;34m'; LIGHTPURPLE='\033[1;35m'; LIGHTCYAN='\033[1;36m'
 WHITE='\033[1;37m'
- 
-,h() { ## show avialable commands
+
+,h() { ,help; }
+,g() { ,gp; }
+,j() { ,julia; }
+,m() { ,markdown; }
+
+,help() { ## show avialable commands
   echo -e "${NO}${LIGHTCYAN}HELP:$OFF"
   gawk 'BEGIN{FS="[(][)][:space:]*[^#]+##[:space:]*"}
             /^,/ && /##/  { printf("%10s :%s\n",$1,$2) }' , 
@@ -17,12 +22,12 @@ WHITE='\033[1;37m'
    git commit -am saving; git push; git status
 }
 
-,jl() { ## run julia
+,julia() { ## run julia
    f=$1; shift
    julia -O0 --compile=min --startup=no $1.jl $*
 }
 
-,md() { ## insert snippets from julia code into markdown
+,markdown() { ## insert snippets from julia code into markdown
   gawk ' 
   function trim(s) { sub(/^[ \t\n]*/,"",s); sub(/[ \t\n]*$/,"",s); return s }
 
