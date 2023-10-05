@@ -8,22 +8,18 @@ alias ,gp="git commit -am saving; git push; git status"
 
 ,md() { 
   gawk ' 
-  PASS==1 && /^##/ {k=$2 ; next}
-  PASS==1 {TXT["<"FILENAME" "k">"] = TXT["<"FILENAME" "k">"] sep $0 ; sep="\n"}
-  PASS==2 {print}
-  PASS==2 && /^```julia/ {   
-    print(TXT[$2" "$3],"\n```")
-    USED[$2" "$3]++
-    skip()
-    next
-  }
-  END { Head="\nWARNINGS:\n"
-        for(k in TXT)
+  function trim(s) { sub(/^[ \t\n]*/,"",s); sub(/[ \t\n]*$/,"",s); return s }
+
+  PASS==1 && /^##/ { k=$2">" ; next}
+  PASS==1 { CHUNK["<"FILENAME" "k] = CHUNK["<"FILENAME" "k] sep $0 ; sep="\n"}
+  PASS==2 { print }
+  PASS==2 && /```julia/ {    
+        print(trim(CHUNK[$2" "$3]),"\n```")
+        USED[$2" "$3]++
+        while(getline x >0) if (x ~ /^```/) break } 
+  END { for(k in CHUNK)
           if (USED[k] != 1) {
-             print(Head"\t "(USED[k]+0)" "k)>"/dev/stderr" 
-             Head=""}}
- 
- function skip() { while(getline >0) if (/^```/) return; }
- ' PASS=1 *.jl PASS=2 $1 > _tmp
+             print("?? used "(USED[k]+0)" time(s) "k)>"/dev/stderr" }}
+  ' PASS=1 *.jl PASS=2 $1 > _tmp
  mv _tmp $1
 }

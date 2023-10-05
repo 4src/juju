@@ -16,6 +16,7 @@ OPTIONS:
   -s --seed   random number seed       = 937162211"
 
 ## words
+
 "Upper case swords denote numbers"
 COL(s) = occursin(r"^[A-Z]", s) ? [] : Dict() 
 
