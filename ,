@@ -2,21 +2,21 @@
 ,g() { ,gp; }
 ,h() { ,help; }
 ,j() { ,julia $*; }
-,s() { ,snippets $*; }
+,s() { ,snips $*; }
 
-,help() {  ## ,h         ;  show help
+,help() {  ## ,h          ;  show help
   echo ""
-  gawk 'BEGIN{FS="[(][)][:space:]*[^#]+##[:space:]*"}
-            /^,/ && /##/  { printf("%-10s :%s\n",$1,$2) }' , ; }
+  gawk 'BEGIN        {FS="[(][)][:space:]*[^#]+##[:space:]*"}
+        /^,/ && /##/ {printf("%-7s :%s\n",$1,$2) }' , ; }
 
-,gp() {  ## ,g         ;  commit all, push to github 
+,gp() {  ## ,g          ;  commit all, push to github 
    git commit -am saving; git push; git status; }
 
-,julia() {  ## ,j file    ;  run julia. fast start-up
+,julia() {  ## ,j file     ;  run julia. fast start-up
    f=$1; shift
-   julia -O0 --compile=min --startup=no $1.jl $*; }
+   julia -O0 --compile=min --startup=no $f.jl $*; }
 
-,snippets() { ## ,s file.md ;  insert snippets from julia code into markdown
+,snips() { ## ,s file.md  ;  insert snippets from julia code into markdown
   if [[ -f "$1" ]]   
   then
     if which gawk > /dev/null

@@ -16,8 +16,6 @@ OPTIONS:
   -s --seed   random number seed       = 937162211"
 
 ## words
-
-"Upper case swords denote numbers"
 COL(s) = occursin(r"^[A-Z]", s) ? [] : Dict() 
 
 ## inc
@@ -82,31 +80,34 @@ DATA(x) = begin
   [sort!(col) for col in dt.cols.all if col isa Vector]
   dt end
 
-data!(dt::Data, r::Vector) = 
-  dt.cols==nothing ?  dt.cols=COLS(r) : push!(dt.rows, cols!(dt.cols,r))  
+data!(dt::Data, r::Row) = 
+  if dt.cols==nothing 
+    dt.cols=COLS(r.cells) 
+  else  
+    cols!(dt.cols,  r.cells) 
+    push!(dt.rows, r) end 
 
 clone(dt::Data, src=[]) = DATA( vcat([dt.cols.names],src) )
 
-stats(dt::Data, cols=nothing, want=often, digits=2) = begin
-  cols = cols==nothing ? dt.cols.y : cols
+stats(dt::Data, cols=dt.cols.y, want=often, digits=2) = begin
   d = Dict("N"=> length(dt.rows))
   for (n,col) in cols 
     d[dt.cols.names[n]] = round(want(col), sigdigits=digits) end
   d end 
 
-d2h(dt::Data, row) = begin
+d2h(dt::Data, row::Row) = begin
   row = score(row)
   d,m  = 0,0
   for (n,col) in dt.cols.y 
     w  = dt.cols.names[n][end] == '-' ? 0 : 1
-    d += (w - norm(col, row[n])) ^ 2 
+    d += (w - norm(col, row.cells[n])) ^ 2 
     m += 1 end 
   (d/m) ^ .5 end
 
-dist(dt::Data, row1,row2) = begin
+dist(dt::Data, row1::Row, row2::Row) = begin
   d = m = 0
   for (n,col) in dt.cols.x
-    d += dist(col, row1[n], row2[n]) ^ the.p
+    d += dist(col, row1.cells[n], row2.cells[n]) ^ the.p
     m += 1 end
   (d/m) ^ (1/the.p) end
 
@@ -114,10 +115,9 @@ dist(dt::Data, row1,row2) = begin
 around(dt::Data,row1,rows) =  
   decorate_sort_undecorate(rows, row2 -> dist(dt,row1,row2))
 
-extremes(dt::Data,rows, x=nothing) = begin
-  faraway = int(the.Far * length(rows))
-  x   = x==nothing ? around(dt, any(row), rows)[faraway] : x
-  y   = around(dt, x, rows)[faraway]
+extremes(dt::Data,rows, far= int(the.Far*length(rows)), 
+                         x=  around(dt, any(rows), rows)[far]) = begin
+  y = around(dt, x, rows)[faraway]
   return x, y, dist(dt,x,y) end
 
 half(dt::Data,rows,above=nothing,sorting=false) = begin
