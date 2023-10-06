@@ -1,4 +1,7 @@
 #!/usr/bin/env bash 
+for x in gawk julia; do 
+  command -v $x > /dev/null || sudo apt install $x; done
+
 ,g() { ,gp; }
 ,h() { ,help; }
 ,j() { ,julia $*; }
@@ -17,7 +20,7 @@
    julia -O0 --compile=min --startup=no $f.jl $*; }
 
 ,snips() { ## ,s file.md  ;  insert snips from code into markdown
-  if command -v gawk > /dev/null && [[ -f "$1" ]]
+  if  [[ -f "$1" ]]
   then 
     gawk 'function trim(s) {sub(/^[ \t\n]*/,"",s); sub(/[ \t\n]*$/,"",s); return s}
 
@@ -33,6 +36,6 @@
               print("?? used "(USED[k]+0)" time(s) "k)>"/dev/stderr" } }
     ' PASS=1 *.jl PASS=2 $1 > _tmp
     mv _tmp $1 
-  else
+  else 
     echo "missing $1.md or gawk"
   fi ; }
