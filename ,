@@ -16,25 +16,23 @@
    f=$1; shift
    julia -O0 --compile=min --startup=no $f.jl $*; }
 
-,snips() { ## ,s file.md  ;  insert snippets from julia code into markdown
-  if [[ -f "$1" ]]   
-  then
-    if which gawk > /dev/null
-    then 
-      gawk ' 
-      function trim(s) { sub(/^[ \t\n]*/,"",s); sub(/[ \t\n]*$/,"",s); return s }
+,snips() { ## ,s file.md  ;  insert snips from code into markdown
+  if command -v gawk > /dev/null && [[ -f "$1" ]]
+  then 
+    gawk 'function trim(s) {sub(/^[ \t\n]*/,"",s); sub(/[ \t\n]*$/,"",s); return s}
 
-      PASS==1 && /^##/ { k=$2">" ; next }
-      PASS==1 { SNIPPET["<"FILENAME" "k] = SNIPPET["<"FILENAME" "k] sep $0 ; sep="\n" }
-      PASS==2 { print }
-      PASS==2 && /```julia/ {    
-            print(trim(SNIPPET[$2" "$3]),"\n```")
-            USED[$2" "$3]++
-            while(getline x >0) if (x ~ /^```/) break } 
-      END { for(k in SNIPPET)
-              if (USED[k] != 1) {
-                print("?? used "(USED[k]+0)" time(s) "k)>"/dev/stderr" } }
-      ' PASS=1 *.jl PASS=2 $1 > _tmp
-    mv _tmp $1  
-  fi 
-fi; }
+    PASS==1 && /^##/      { k="<"FILENAME" "$2">"    ; next     }
+    PASS==1               { SNIP[k] = SNIP[k] sep $0 ; sep="\n" }
+    PASS==2               { print }
+    PASS==2 && /```julia/ { k=$2" "$3   
+                            print(trim(SNIP[k]),"\n```")
+                            USED[k]++
+                            while(getline x >0) if (x ~ /^```/) break } 
+    END { for(k in SNIP)
+            if (USED[k] != 1) {
+              print("?? used "(USED[k]+0)" time(s) "k)>"/dev/stderr" } }
+    ' PASS=1 *.jl PASS=2 $1 > _tmp
+    mv _tmp $1 
+  else
+    echo "missing $1.md or gawk"
+  fi ; }

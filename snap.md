@@ -6,7 +6,7 @@ $P\left( x \right) = \frac{{e^{ - \lambda } \lambda ^x }}{{x!}}$
 
 ## asdas dssaas
 
-```julia <snap.jl fred> 
+```julia <snap.jl fred>  
 about="
 snap.jl: a fast way to find good options 
 (c) Tim Menzies <timm@ieee.org>, BSD-2 license
@@ -26,8 +26,7 @@ OPTIONS:
 
 <1> says
 
-```julia <snap.jl words> 
-"Upper case swords denote numbers"
+```julia <snap.jl words>   
 COL(s) = occursin(r"^[A-Z]", s) ? [] : Dict() 
 ```
 
