@@ -1,6 +1,6 @@
 ## fred
 about="
-snap.jl: a fast way to find good options 
+samplr.jl: sample the corners, not the middle
 (c) Tim Menzies <timm@ieee.org>, BSD-2 license
      
 OPTIONS:
@@ -46,6 +46,8 @@ dist(v::Vector,x,y) = begin
 #---------- ---------- ---------- ---------- ---------- ---------- ----
 @kwdef mutable struct Cols 
   klass=nothing; all=[]; x=Dict(); y=Dict(); names=[] end  
+@kwdef mutable struct Row cells=[]; hidden=Dict() end
+@kwdef mutable struct Data rows=[]; cols=nothing end
 
 COLS(v::Vector) = begin
   cl = Cols(names=v, all= [COL(s) for s in v])
@@ -60,23 +62,23 @@ cols!(cl::Cols, row::Vector) = begin
   row end
 
 #---------- ---------- ---------- ---------- ---------- ---------- ----
-@kwdef mutable struct Row cells=[]; hidden=Dict() end
-ROW(dt:data,v::Vector) = begin
+ROW(dt::Data,v::Vector) = begin
+  row0 = Row(cells=v)
   for (n,_) in dt.cols.y
-    row.cells[n] = "?"
-    rows.hidden[n] = v[n]  end end
+    row0.cells[n]  = "?"
+    row0.hidden[n] = v[n] end 
+  row0 end
 
 score(row::Row) = begin
   if rows.hidden != nothing
     for (n,v) in row.hidden  row.cells[n] = v end
     rows.hidden = nothing end
   row end
-#---------- ---------- ---------- ---------- ---------- ---------- ----
-@kwdef mutable struct Data rows=[]; cols=nothing end
 
+#---------- ---------- ---------- ---------- ---------- ---------- ----
 DATA(x) = begin
   dt = Data() 
-  x isa Vector ? [data!(dt,r) for r in x] : csv(x,r -> data!(dt,ROW(r)))  
+  x isa Vector ? [data!(dt,r) for r in x] : csv(x,r->data!(dt,ROW(dt,r)))  
   [sort!(col) for col in dt.cols.all if col isa Vector]
   dt end
 
@@ -115,15 +117,15 @@ dist(dt::Data, row1::Row, row2::Row) = begin
 around(dt::Data,row1,rows) =  
   decorate_sort_undecorate(rows, row2 -> dist(dt,row1,row2))
 
-extremes(dt::Data,rows, far= int(the.Far*length(rows)), 
-                         x=  around(dt, any(rows), rows)[far]) = begin
+twoFarCorners(dt::Data,rows, far= int(the.Far*length(rows)), 
+                       x=  around(dt, any(rows), rows)[far]) = begin
   y = around(dt, x, rows)[faraway]
   return x, y, dist(dt,x,y) end
 
 half(dt::Data,rows,above=nothing,sorting=false) = begin
-  a,b,C = extremes(dt,many(rows, min(the.Half, length(rows))))
-  if sorting and d2h(dt,b) < d2h(dt,a) a,b=b,a end
-  cos  = r->  (dist(dt,r,a)^2 + C^2 - dist(dt,r,b)^2) )/(2*c)
+  a,b,C = twoFarCorners(dt,many(rows, min(the.Half, length(rows))))
+  if sorting && d2h(dt,b) < d2h(dt,a) a,b=b,a end
+  cos  = r ->  (dist(dt,r,a)^2 + C^2 - dist(dt,r,b)^2)/(2*c)
   rows = decorate_sort_undecorate(rows,cos)
   mid  = int(length(rows/2))
   a,b,rows[1:mid],rows[mid+1:end] end
@@ -204,13 +206,9 @@ eg("sets  : show the settings",  () ->
 eg("csv   : print rows in csv file", () -> 
   csv(the.file, (r) -> println(r)))
 
-eg("rani  : print random ints", () ->  begin
-  global rseed=1; print(    rani(1,10)," ",rani(1,10))
-         rseed=1; println(" ",rani(1,10)," ",rani(1,10)) end)
-
-eg("ranf  : print random floats", () ->  begin
-  global rseed=1; print(    ranf()," ",ranf())
-         rseed=1; println(" ",ranf()," ",ranf()) end)
+eg("rand  : print random ints", () ->  begin
+  global rseed=1; println(rani(1,10), " ", rnd(ranf(1,10),2))
+         rseed=1; println(rani(1,10), " ", rnd(ranf(1,10),2)) end)
 
 eg("many  : print random items",  () ->  
   println(many([10,20,30],4)))
@@ -234,15 +232,15 @@ eg("d2h    : calculate distance to heaven",()-> begin
 
 eg("order  : print order", () -> begin
    dt    = DATA(the.file) 
-   rows = sort(dt.rows, alg=InsertionSort), by=row -> d2h(dt,row)) 
+   rows = sort(dt.rows, alg=InsertionSort, by=row -> d2h(dt,row))
    n    = length(rows)
    m    = int(n ^ .5)
    println("baseline ", stats(dt))
-   println("best     ",stats(clone(dt,rows[1:m+1])))
-   println("rest     ",stats(clone(dt,rows[n-m:n]))) end)
+   println("best     ", stats(clone(dt,rows[1:m+1])))
+   println("rest     ", stats(clone(dt,rows[n-m:n]))) end)
 
 eg("dist  : print dist", () -> begin
-   dt    = DATA(the.file) 
+   dt = DATA(the.file) 
    i=1
    while i < length(dt.rows)
     println(rnd(dist(dt, dt.rows[1], dt.rows[i])), "\t", dt.rows[i])
