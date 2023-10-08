@@ -35,6 +35,22 @@ spread(d::Dict)   = begin
 norm(v::Vector, n::Number) = (n - v[1]) / (v[end] - v[1] + 1E-30)
 norm(_, x) = x
  
+bin(_,x) = x
+bin(v::Vector, n::Number) = begin
+  x = (n - usually(v)) / (spread(v) + 1E-30) 
+  for (b,x) in enumerate(breaks[the.bin]) if tmp <=x return b end end
+  return the.bins - 1 end 
+
+breaks = Dict(
+  3  => [                       -.43,	        .43 ],
+  4  => [                       -.67,    0,	  .67 ],
+  5  => [                 -.84, -.25,         .25,  .84 ],
+  6  => [                 -.97,	-.43,    0,	  .43,  .97 ],
+  7  => [          -1.07,	-.57,	-.18,	        .18,  .57,  1.07 ],
+  8  => [          -1.15,	-.67,	-.32, 	 0,	  .32,  .67,  1.15 ],
+  9  => [   -1.22,  -.76,	-.43,	-.14,	        .14,	.43,   .76,	 1.22 ],
+  10 => [   -1.28,	-.84,	-.52,	-.25,	   0,	  .25,  .52,	 .84,  1.28 ])
+    
 dist(d::Dict,  x,y) = (x=="?" && y=="?") ? 1 : (x==y ? 0 : 1)  
 dist(v::Vector,x,y) = begin
   if (x=="?" && y=="?") 1 else
@@ -46,7 +62,7 @@ dist(v::Vector,x,y) = begin
 #---------- ---------- ---------- ---------- ---------- ---------- ----
 @kwdef mutable struct Cols 
   klass=nothing; all=[]; x=Dict(); y=Dict(); names=[] end  
-@kwdef mutable struct Row cells=[]; hidden=Dict() end
+@kwdef mutable struct Row cells=[]; bins=[]; scored=false end
 @kwdef mutable struct Data rows=[]; cols=nothing end
 
 COLS(v::Vector) = begin
@@ -57,35 +73,31 @@ COLS(v::Vector) = begin
       (occursin(s[end],"!+-") ? cl.y : cl.x)[n] = col end end  
   cl end
 
-cols!(cl::Cols, row::Vector) = begin
-  [inc!(col,x) for (col,x) in zip(cl.all,row) if x != "?"]
-  row end
+cols!(dt::Data, cells::Vector) = begin
+  [inc!(col,x) for (col,x) in zip(dt.cl.all, cells) if x != "?"]
+  cells end
 
+bins(dt::Data, rows::Vector) = begin
+  for (n,col) in enumerate(dt.cols.x)
+    for row in rows 
+      row.bin[n] = bin(col, cell(row,n,dt)) end end end   
 #---------- ---------- ---------- ---------- ---------- ---------- ----
-ROW(dt::Data,v::Vector) = begin
-  row0 = Row(cells=v)
-  for (n,_) in dt.cols.y
-    row0.cells[n]  = "?"
-    row0.hidden[n] = v[n] end 
-  row0 end
+ROW(dt::Data,v::Vector) = Row(cells=v, bins=deepcopy(v))
 
-score(row::Row) = begin
-  if rows.hidden != nothing
-    for (n,v) in row.hidden  row.cells[n] = v end
-    rows.hidden = nothing end
-  row end
+cell(r::Row, n::Int, dt::Data) = begin
+  if haskey(dt.cols.y, n) r.scored = true end
+  r.cells[n] end
 
 #---------- ---------- ---------- ---------- ---------- ---------- ----
 DATA(x) = begin
   dt = Data() 
-  x isa Vector ? [data!(dt,r) for r in x] : csv(x,r->data!(dt,ROW(dt,r)))  
-  [sort!(col) for col in dt.cols.all if col isa Vector]
+  x isa Vector ? [data!(dt,r) for r in x] : csv(x,r->data!(dt, ROW(r)))  
+  [sort!(col) for col in dt.cols.all]
+  bins(dt.cols)
   dt end
 
 data!(dt::Data, r::Row) = 
-  if dt.cols==nothing 
-    dt.cols=COLS(r.cells) 
-  else  
+  if dt.cols==nothing dt.cols=COLS(r.cells) else  
     cols!(dt.cols,  r.cells) 
     push!(dt.rows, r) end 
 
@@ -97,19 +109,18 @@ stats(dt::Data, cols=dt.cols.y, want=often, digits=2) = begin
     d[dt.cols.names[n]] = round(want(col), sigdigits=digits) end
   d end 
 
-d2h(dt::Data, row::Row) = begin
-  row = score(row)
+d2h(dt::Data, row::Row) = begin 
   d,m  = 0,0
   for (n,col) in dt.cols.y 
     w  = dt.cols.names[n][end] == '-' ? 0 : 1
-    d += (w - norm(col, row.cells[n])) ^ 2 
+    d += (w - norm(col, cell(row,n,dt))) ^ 2 
     m += 1 end 
   (d/m) ^ .5 end
 
 dist(dt::Data, row1::Row, row2::Row) = begin
   d = m = 0
   for (n,col) in dt.cols.x
-    d += dist(col, row1.cells[n], row2.cells[n]) ^ the.p
+    d += dist(col, cell(row1,n,dt), cell(row2,n,dt)) ^ the.p
     m += 1 end
   (d/m) ^ (1/the.p) end
 
