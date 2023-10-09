@@ -19,7 +19,7 @@ OPTIONS:
 COL(s) = occursin(r"^[A-Z]", s) ? [] : Dict() 
 
 ## inc
-incs!(x, v::Vector)       = begin  [inc!(x,y) for y in v]; x end
+incs!(x, v::Vector) = begin  [inc!(x,y) for y in v]; x end
 
 inc!(v::Vector,x::Number) = push!(v,x)  
 inc!(d::Dict,  x)         = d[x] = get(d,x,0) + 1 
@@ -32,24 +32,30 @@ spread(d::Dict)   = begin
   N = sum(n for (_,n) in d if n>0)
   - sum(n/N*log2(n/N) for (_,n) in d if n>0) end
 
-norm(v::Vector, n::Number) = (n - v[1]) / (v[end] - v[1] + 1E-30)
 norm(_, x) = x
- 
-bin(_,x) = x
+norm(v::Vector, n::Number) = 
+  (n - v[1]) / (v[end] - v[1] + 1E-30)
+
+bins(_,__,x) = x
+bins(v::Vector,n::Int, dt::Data) = 
+ for row in dt.rows 
+    row.bins[n] = bin(col, cell(row,n,dt)) end    
+
 bin(v::Vector, n::Number) = begin
   x = (n - usually(v)) / (spread(v) + 1E-30) 
-  for (b,x) in enumerate(breaks[the.bin]) if tmp <=x return b end end
+  for (b,x) in enumerate(breaks[the.bin]) 
+    if tmp <=x return b end end
   return the.bins - 1 end 
 
 breaks = Dict(
-  3  => [                       -.43,	        .43 ],
-  4  => [                       -.67,    0,	  .67 ],
-  5  => [                 -.84, -.25,         .25,  .84 ],
-  6  => [                 -.97,	-.43,    0,	  .43,  .97 ],
-  7  => [          -1.07,	-.57,	-.18,	        .18,  .57,  1.07 ],
-  8  => [          -1.15,	-.67,	-.32, 	 0,	  .32,  .67,  1.15 ],
-  9  => [   -1.22,  -.76,	-.43,	-.14,	        .14,	.43,   .76,	 1.22 ],
-  10 => [   -1.28,	-.84,	-.52,	-.25,	   0,	  .25,  .52,	 .84,  1.28 ])
+  3 =>[                     -.43,	    .43 ],
+  4 =>[                     -.67, 0,  .67 ],
+  5 =>[               -.84, -.25,    .25,  .84 ],
+  6 =>[               -.97,	-.43, 0, .43,  .97 ],
+  7 =>[        -1.07,	-.57,	-.18,	   .18,  .57,  1.07 ],
+  8 =>[        -1.15,	-.67,	-.32, 0, .32,  .67,  1.15 ],
+  9 =>[-1.22,  -.76,	-.43,	-.14,	   .14,	.43,   .76,	 1.22 ],
+  10=>[-1.28,	 -.84,	-.52,	-.25,	0, .25,  .52,	 .84,  1.28 ])
     
 dist(d::Dict,  x,y) = (x=="?" && y=="?") ? 1 : (x==y ? 0 : 1)  
 dist(v::Vector,x,y) = begin
@@ -59,7 +65,7 @@ dist(v::Vector,x,y) = begin
     if y=="?" y = (x < .5 ? 1 : 0) end 
     abs(x - y) end end
 
-#---------- ---------- ---------- ---------- ---------- ---------- ----
+#-------- --------- --------- --------- --------- --------- ----
 @kwdef mutable struct Cols 
   klass=nothing; all=[]; x=Dict(); y=Dict(); names=[] end  
 @kwdef mutable struct Row cells=[]; bins=[]; scored=false end
@@ -77,23 +83,23 @@ cols!(dt::Data, cells::Vector) = begin
   [inc!(col,x) for (col,x) in zip(dt.cl.all, cells) if x != "?"]
   cells end
 
-bins(dt::Data, rows::Vector) = begin
-  for (n,col) in enumerate(dt.cols.x)
-    for row in rows 
-      row.bin[n] = bin(col, cell(row,n,dt)) end end end   
-#---------- ---------- ---------- ---------- ---------- ---------- ----
+ 
+#-------- --------- --------- --------- --------- --------- ----
 ROW(dt::Data,v::Vector) = Row(cells=v, bins=deepcopy(v))
 
 cell(r::Row, n::Int, dt::Data) = begin
   if haskey(dt.cols.y, n) r.scored = true end
   r.cells[n] end
 
-#---------- ---------- ---------- ---------- ---------- ---------- ----
+#-------- --------- --------- --------- --------- --------- ----
 DATA(x) = begin
   dt = Data() 
-  x isa Vector ? [data!(dt,r) for r in x] : csv(x,r->data!(dt, ROW(r)))  
-  [sort!(col) for col in dt.cols.all]
-  bins(dt.cols)
+  if x isa Vector 
+    [data!(dt,r) for r in x] 
+  else   
+    csv(x,r->data!(dt,ROW(r))) end
+  [sort!(col)     for col in dt.cols.all]
+  [bins(col,n,dt) for (n,col) in  in dt.cols.x]
   dt end
 
 data!(dt::Data, r::Row) = 
@@ -124,24 +130,29 @@ dist(dt::Data, row1::Row, row2::Row) = begin
     m += 1 end
   (d/m) ^ (1/the.p) end
 
-#---------- ---------- ---------- ---------- ---------- ---------- ----
+#-------- --------- --------- --------- --------- --------- ----
 around(dt::Data,row1,rows) =  
   decorate_sort_undecorate(rows, row2 -> dist(dt,row1,row2))
 
-twoFarCorners(dt::Data,rows, far= int(the.Far*length(rows)), 
-                       x=  around(dt, any(rows), rows)[far]) = begin
+twoFarCorners(dt::Data, 
+              rows, 
+              sorting,
+              far = int(the.Far*length(rows)), 
+              x   = around(dt, any(rows), rows)[far]) = begin
   y = around(dt, x, rows)[faraway]
+  if sorting && d2h(dt,x) < d2h(dt,y) x,y = y,x end 
   return x, y, dist(dt,x,y) end
 
 half(dt::Data,rows,above=nothing,sorting=false) = begin
-  a,b,C = twoFarCorners(dt,many(rows, min(the.Half, length(rows))))
-  if sorting && d2h(dt,b) < d2h(dt,a) a,b=b,a end
-  cos  = r ->  (dist(dt,r,a)^2 + C^2 - dist(dt,r,b)^2)/(2*c)
-  rows = decorate_sort_undecorate(rows,cos)
-  mid  = int(length(rows/2))
-  a,b,rows[1:mid],rows[mid+1:end] end
+  x,y,C = twoFarCorners(dt,
+                        many(rows, min(the.Half,length(rows))),
+                        sorting)
+  cos   = r ->  (dist(dt,r,x)^2 + C^2 - dist(dt,r,y)^2)/(2*C)
+  rows  = decorate_sort_undecorate(rows,cos)
+  mid   = int(length(rows/2))
+  x,y,rows[1:mid],rows[mid+1:end] end
 
-#---------- ---------- ---------- ---------- ---------- ---------- ----
+#-------- --------- --------- --------- --------- --------- ----
 rnd(x,n=3)             = round(x,sigdigits=n)
 normal(mu,sd)          = mu + sd*sqrt(-2*log(ranf())) * cos(2*π*ranf())
 int(n::Number)         = floor(Int,n)
@@ -159,7 +170,7 @@ what(s) = begin
     if ((x=tryparse(t,s)) != nothing) return x end end 
   s end
 
-the=(;Dict(Symbol(k) => what(v) 
+the=(;Dict(Symbol(k)=>what(v) 
            for (k,v) in eachmatch(r"\n.*--(\S+)[^=]+= *(\S+)",about))...)  
 
 rseed=the.seed
@@ -185,7 +196,7 @@ cli(d::Dict) = begin
                v==false ? true  : what(ARGS[argv+1])) end end end
   d end
 
-#---------- ---------- ---------- ---------- ---------- ---------- ----
+#-------- --------- --------- --------- --------- --------- ----
 @kwdef mutable struct Egs names=[]; funs=Dict() end
 EGS=Egs()
 eg(s,fun) = begin push!(EGS.names,s); EGS.funs[s] = fun end
@@ -207,7 +218,7 @@ runs() =
   else  
    [go(arg) for arg in ARGS] end
 
-#---------- ---------- ---------- ---------- ---------- ---------- ----
+#-------- --------- --------- --------- --------- --------- ----
 eg("boom  : test fail",  () -> 
   false)
 
@@ -265,5 +276,5 @@ eg("around  : print around", () -> begin
       println(rnd(dist(dt, dt.rows[1], rows[i])), "\t", rows[i])
       i += 60  end end )
 
-#---------- ---------- ---------- ---------- ---------- ---------- ----
+#-------- --------- --------- --------- --------- --------- ----
 if (abspath(PROGRAM_FILE) == @__FILE__) runs() end
