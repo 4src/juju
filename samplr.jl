@@ -36,27 +36,7 @@ norm(_, x) = x
 norm(v::Vector, n::Number) = 
   (n - v[1]) / (v[end] - v[1] + 1E-30)
 
-bins(_,__,x) = x
-bins(v::Vector,n::Int, dt::Data) = 
- for row in dt.rows 
-    row.bins[n] = bin(col, cell(row,n,dt)) end    
-
-bin(v::Vector, n::Number) = begin
-  x = (n - usually(v)) / (spread(v) + 1E-30) 
-  for (b,x) in enumerate(breaks[the.bin]) 
-    if tmp <=x return b end end
-  return the.bins - 1 end 
-
-breaks = Dict(
-  3 =>[                     -.43,	    .43 ],
-  4 =>[                     -.67, 0,  .67 ],
-  5 =>[               -.84, -.25,    .25,  .84 ],
-  6 =>[               -.97,	-.43, 0, .43,  .97 ],
-  7 =>[        -1.07,	-.57,	-.18,	   .18,  .57,  1.07 ],
-  8 =>[        -1.15,	-.67,	-.32, 0, .32,  .67,  1.15 ],
-  9 =>[-1.22,  -.76,	-.43,	-.14,	   .14,	.43,   .76,	 1.22 ],
-  10=>[-1.28,	 -.84,	-.52,	-.25,	0, .25,  .52,	 .84,  1.28 ])
-    
+   
 dist(d::Dict,  x,y) = (x=="?" && y=="?") ? 1 : (x==y ? 0 : 1)  
 dist(v::Vector,x,y) = begin
   if (x=="?" && y=="?") 1 else
@@ -91,7 +71,27 @@ cell(r::Row, n::Int, dt::Data) = begin
   if haskey(dt.cols.y, n) r.scored = true end
   r.cells[n] end
 
-#-------- --------- --------- --------- --------- --------- ----
+bins(_,__,x) = x
+bins(v::Vector,n::Int, dt::Data) = 
+ for row in dt.rows 
+    row.bins[n] = bin(col, cell(row,n,dt)) end    
+
+bin(v::Vector, n::Number) = begin
+  x = (n - usually(v)) / (spread(v) + 1E-30) 
+  for (b,x) in enumerate(breaks[the.bin]) 
+    if tmp <=x return b end end
+  return the.bins - 1 end 
+
+breaks = Dict(
+  3 =>[                     -.43,	    .43 ],
+  4 =>[                     -.67, 0,  .67 ],
+  5 =>[               -.84, -.25,    .25,  .84 ],
+  6 =>[               -.97,	-.43, 0, .43,  .97 ],
+  7 =>[        -1.07,	-.57,	-.18,	   .18,  .57,  1.07 ],
+  8 =>[        -1.15,	-.67,	-.32, 0, .32,  .67,  1.15 ],
+  9 =>[-1.22,  -.76,	-.43,	-.14,	   .14,	.43,   .76,	 1.22 ],
+  10=>[-1.28,	 -.84,	-.52,	-.25,	0, .25,  .52,	 .84,  1.28 ])
+ #-------- --------- --------- --------- --------- --------- ----
 DATA(x) = begin
   dt = Data() 
   if x isa Vector 
@@ -99,7 +99,7 @@ DATA(x) = begin
   else   
     csv(x,r->data!(dt,ROW(r))) end
   [sort!(col)     for col in dt.cols.all]
-  [bins(col,n,dt) for (n,col) in  in dt.cols.x]
+  [bins(col,n,dt) for (n,col) in dt.cols.x]
   dt end
 
 data!(dt::Data, r::Row) = 
@@ -202,7 +202,7 @@ EGS=Egs()
 eg(s,fun) = begin push!(EGS.names,s); EGS.funs[s] = fun end
 go(arg) = [run(s,EGS.funs[s]) for s in EGS.names if arg == split(s)[1]] 
 
-run(s,fun) = begin 
+run(s,fun=EGS.funs[split(s)[1]]) = begin 
   global the 
   b4 = deepcopy(the) 
   global rseed = the.seed
