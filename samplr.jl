@@ -1,3 +1,4 @@
+#!/usr/bin/env julia --compile=min --optimize=0
 ## fred
 about="
 samplr.jl: sample the corners, not the middle
