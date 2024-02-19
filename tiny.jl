@@ -112,21 +112,20 @@ cli(nt::NamedTuple) = (;cli(Dict(pairs(nt)))...)
 cli(d::Dict) = begin
   for (k,v) in d 
     s=String(k) 
-    for (argv,flag) in enumerate(ARGS) 
-      if flag in ["-"*s[1],  "--"*s]
+    for (argv,flag) in enumerate(ARGS)  
+      if flag in ["-"*s[1],  "--"*s] 
         d[k] = v==true  ? false : (
-               v==false ? true  : what(ARGS[argv+1])) end end end
+               v==false ? true  : what(ARGS[argv+1])) 
+        #print(k," ",v," ", d[k])
+              end end end 
   d end
 
 #-------- --------- --------- --------- --------- --------- ----
-@kwdef mutable struct Egs names=[]; funs=Dict() end
-EGS=Egs()
-eg(s,fun) = begin push!(EGS.names,s); EGS.funs[s] = fun end
-go(arg)   = [run(s) for s in EGS.names if arg == split(s)[1]]  
+eg=Dict()
 
-run(s,fun=EGS.funs[split(s)[1]]) = begin 
-  print(s)
-  println(fun)
+go(arg) = [run(s) for (s,_) in eg if arg == split(s)[1]]  
+
+run(s,fun=eg[s]) = begin 
   global the 
   b4 = deepcopy(the) 
   global rseed = the.seed
@@ -134,53 +133,57 @@ run(s,fun=EGS.funs[split(s)[1]]) = begin
   the = deepcopy(b4)
   out end
 
-runs() = 
+runs(the) =
+  cli(the)
+  #println(the.seed," ",the.help)
+  #print(the)
   if the.help 
-    global the = cli(the)
     println(about,"\n\n","ACTIONS:") 
-    for s in EGS.names println("   julia snap.jl $s") end 
+    [println("   julia tiny.jl $s") for (s,_) in eg]
   else  
    [go(arg) for arg in ARGS] end
+
+
 #-------- --------- --------- --------- --------- --------- ----
-Egs["boom"] = _  -> false
+eg["boom : handle a crash"] = () -> false
 
-eg("sets  : show the settings",  () -> 
-  println(the)) 
+eg["sets  : show the settings"]=  () -> println(the)
 
-eg("csv   : print rows in csv file", () -> 
-  csv(the.file, (r) -> println(r)))
+eg["csv   : print rows in csv file"]= () -> 
+  csv(the.file, (r) -> println(r))
 
-eg("rand  : print random ints", () ->  begin
+eg["rand  : print random ints"] =  () ->  begin
   global rseed=1; println(rani(1,10), " ", rnd(ranf(1,10),2))
-         rseed=1; println(rani(1,10), " ", rnd(ranf(1,10),2)) end)
+         rseed=1; println(rani(1,10), " ", rnd(ranf(1,10),2)) end
 
-eg("many  : print random items",  () ->  
-  println(many([10,20,30],4)))
+eg["many  : print random items"] =  () ->  
+  println(many([10,20,30],4))
 
-eg("num   : print nums", () -> begin
+eg["num   : print nums"] = () -> begin
   v=[]
   incs!(v, [normal(10,2) for _ in 1:1000])
   sort!(v)
-  9.8 < often(v) < 10.2 && 1.85 < spread(v) < 2.15 end)
+  9.8 < often(v) < 10.2 && 1.85 < spread(v) < 2.15 end
 
-eg("sym   : print syms", () -> begin
+eg["sym   : print syms"] = () -> begin
   d = Dict() 
   incs!(d, [c for c in "aaaabbc"])
-  return 'a'==often(d) && 1.37 < spread(d) < 1.38  end)
+  return 'a'==often(d) && 1.37 < spread(d) < 1.38  end
 
-eg("data   : print data", () ->  print(stats(DATA(the.file))))
+eg["data   : print data"] =  () ->  
+  print(stats(DATA(the.file)))
 
-eg("d2h    : calculate distance to heaven",()-> begin
+eg["d2h    : calculate distance to heaven"] = ()-> begin
   dt = DATA(the.file) 
-  print(d2h(dt,dt.rows[1])) end)
+  print(d2h(dt,dt.rows[1])) end
 
-eg("order  : print order", () -> begin
+eg["order  : print order"] = () -> begin
    dt    = DATA(the.file) 
    rows = sort(dt.rows, alg=InsertionSort, by=row -> d2h(dt,row))
    n    = length(rows)
    m    = int(n ^ .5)
    println("baseline ", stats(dt))
    println("best     ", stats(clone(dt,rows[1:m+1])))
-   println("rest     ", stats(clone(dt,rows[n-m:n]))) end)
+   println("rest     ", stats(clone(dt,rows[n-m:n]))) end
 #-------- --------- --------- --------- --------- --------- ----
-if (abspath(PROGRAM_FILE) == @__FILE__) runs() end
+if (abspath(PROGRAM_FILE) == @__FILE__) runs(the) end

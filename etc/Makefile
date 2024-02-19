@@ -19,7 +19,7 @@ julia:
 packages: ## install julia packages:
 	julia -e 'using Pkg; Pkg.add("Parameters"); Pkg.add("ResumableFunctions")'
 
-%.ps : %.jl
+~/tmp/%.ps : %.jl
 	@mkdir -p ~/tmp
 	@echo "ps-ing $1 ... "
 	@a2ps                          \
@@ -31,5 +31,5 @@ packages: ## install julia packages:
 		--pro=color                       \
 		--columns  2                       \
 		-M letter                           \
-		--pretty-print="jl.ssh"              \
+		--pretty-print="etc/jl.ssh"              \
 		-o $@ $^
