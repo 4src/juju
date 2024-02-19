@@ -1,4 +1,7 @@
 #!/usr/bin/env julia --compile=min --optimize=0
+# my code convetion:  
+# `xxx = XXX()` uses the `XXX()`` constructor to create a variable of type `Xxx``.
+# e.g.  `sym = SYM()`` creates `sym`, a variable of type `Sym``.
 about="
 tiny.jl: smo
 (c)2024 Tim Menzies <timm@ieee.org>, BSD-2 license
@@ -18,21 +21,23 @@ OPTIONS:
 @kwdef mutable struct Num
   at=0; txt=""; n=0; mu=0; m2=0; sd=0; 
   lo=1E-30; hi= -1E-30; heaven = 1 end
+
 @kwdef mutable struct Sym
   at=0; txt=""; n=0; has=Dict() end
+
 @kwdef mutable struct Cols 
   klass=nothing; all=[]; x=Dict(); y=Dict(); names=[] end  
+
 @kwdef mutable struct Data rows=[]; cols=nothing end
-
-
+#-------- --------- --------- --------- --------- --------- ----
 COL(s=" ",n=0) = (occursin(r"^[A-Z]", s) ? NUM : SYM)(s,n) 
 SYM(s=" ",n=0) = Sym(at=n, txt=s) 
 NUM(s=" ",n=0) = begin 
   num = Num(at=n, txt=s)
   num.heaven = s[end]=="-" ? 0 : 1
   num end
-
-adds!!(x, v::Vector) = begin [add!(x,y) for y in v]; x end
+#-------- --------- --------- --------- --------- --------- ----
+adds!(x, v::Vector) = begin [add!(x,y) for y in v]; x end
 
 add!(sym::Sym, x) = begin sym.n+=1; sym.has[x]=get(sym.has,x,0) + 1 end
 add!(num::Num, x::Number) = begin 
@@ -142,8 +147,6 @@ runs(the) =
     [println("   julia tiny.jl $s") for (s,_) in eg]
   else  
    [go(arg) for arg in ARGS] end
-
-
 #-------- --------- --------- --------- --------- --------- ----
 eg["boom : handle a crash"] = () -> false
 
