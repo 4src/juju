@@ -142,8 +142,7 @@ runs() =
   else  
    [go(arg) for arg in ARGS] end
 #-------- --------- --------- --------- --------- --------- ----
-eg("boom  : test fail",  () -> 
-  false)
+Egs["boom"] = _  -> false
 
 eg("sets  : show the settings",  () -> 
   println(the)) 
