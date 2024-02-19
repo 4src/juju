@@ -39,6 +39,7 @@ NUM(s=" ",n=0) = begin
 #-------- --------- --------- --------- --------- --------- ----
 adds!(x, v::Vector) = begin [add!(x,y) for y in v]; x end
 
+
 add!(sym::Sym, x) = begin sym.n+=1; sym.has[x]=get(sym.has,x,0) + 1 end
 add!(num::Num, x::Number) = begin 
   n    += 1
