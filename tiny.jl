@@ -16,7 +16,7 @@ OPTIONS:
   -s --seed   random number seed       = 937162211"
 
 @kwdef mutable struct Num
-  at=0; txt=""; n=0; mu=0; m2-0; sd=0; 
+  at=0; txt=""; n=0; mu=0; m2=0; sd=0; 
   lo=1E-30; hi= -1E-30; heaven = 1 end
 @kwdef mutable struct Sym
   at=0; txt=""; n=0; has=Dict() end
@@ -24,12 +24,13 @@ OPTIONS:
   klass=nothing; all=[]; x=Dict(); y=Dict(); names=[] end  
 @kwdef mutable struct Data rows=[]; cols=nothing end
 
-COL(s,n) = (occursin(r"^[A-Z]", s) ? NUM : SYM)(s,n) 
-SYM(s,n) = Sym(at=n, txt=s) 
-NUM(s,n) = begin 
+
+COL(s=" ",n=0) = (occursin(r"^[A-Z]", s) ? NUM : SYM)(s,n) 
+SYM(s=" ",n=0) = Sym(at=n, txt=s) 
+NUM(s=" ",n=0) = begin 
   num = Num(at=n, txt=s)
   num.heaven = s[end]=="-" ? 0 : 1
-  num
+  num end
 
 adds!!(x, v::Vector) = begin [add!(x,y) for y in v]; x end
 
@@ -51,11 +52,11 @@ spread(sym::Sym) = begin
   N = sum(n for (_,n) in sym.has if n>0)
   - sum(n/N*log2(n/N) for (_,n) in sym.has if n>0) end
 
-norm(_,x) = x
-norm(num::Num, x::Number) = (x - num.lo]) / (num.hi - num.lo + 1E-30)
+norm(_, x)  = x 
+norm(num::Num, x::Number) = (x - num.lo) / (num.hi - num.lo + 1E-30)
 #-------- --------- --------- --------- --------- --------- ----
 COLS(v::Vector) = begin
-  cols = Cols(names=v, all= [COL(s) for s in v])
+  cols = Cols(names=v, all= [COL(s,n) for (n,s) in enumerate(v)])
   for (n,(s,col)) in enumerate(zip(v,cols.all))
     if s[end] != "X" 
       if s[end] == "!" klass=col end
@@ -64,13 +65,13 @@ COLS(v::Vector) = begin
 #-------- --------- --------- --------- --------- --------- ----
 DATA(x) = adds!(Data(),x)
 
-adds!(data::Data, v::Vector) = [add!(data,r) for r in x]
+adds!(data::Data, v::Vector) = [add!(data,r) for r in v]
 adds!(data::Data, file)      = csv(file, r->add!(data,r))
 
 add!(data::Data, v::Vector) = 
-  if data.cols==nothing data.cols=COLS(v) else  
+  if data.cols === nothing data.cols=COLS(v) else  
     [add!!(col,x) for (col,x) in zip(data.cols.all, v) if x != "?"]
-    push!(dt.rows, v  qasdv ) end 
+    push!(data.rows, v) end 
 
 clone(data::Data, src=[]) = adds!(DATA([data.cols.names]),src)
 
@@ -81,18 +82,18 @@ d2h(data::Data, v::Vector) = begin
     n += 1 end 
   (d/n) ^ .5 end
 #-------- --------- --------- --------- --------- --------- ----
+int(n::Number) = floor(Int,n)
+rnd(x,n=3)     = round(x,sigdigits=n)
+
 what(s) = begin
-  for t in [Int32,Float64,Bool]
-    if ((x=tryparse(t,s)) != nothing) return x end end 
+  for t in [Int32,Float64,Bool] 
+    if ((x=tryparse(t,s)) !== nothing) return x end end 
   s end
 
 the=(;Dict(Symbol(k)=>what(v) 
-           for (k,v) in eachmatch(r"\n.*--(\S+)[^=]+= *(\S+)",about))...)  
+      for (k,v) in eachmatch(r"\n.*--(\S+)[^=]+= *(\S+)",about))...)  
 
-function l.shuffle(t,    u,j)
-  j=rani(1,i)
-  for i = #u,2,-1 do j=math.random(i); u[i],u[j] = u[j],u[i] end
-  return u end
+shuffle!(v::Vector) = sort(v, by= _ -> rani(1,100000))
               
 rseed=the.seed
 rani(lo::Int, hi::Int) = int(.5 + ranf(lo,hi))  
@@ -118,11 +119,14 @@ cli(d::Dict) = begin
   d end
 
 #-------- --------- --------- --------- --------- --------- ----
-@kwdef mutable struct Egs bad=[]; funs=Dict() end
-
-go(arg) = [run(s,EGS.funs[s]) for s in EGS.names if arg == split(s)[1]] 
+@kwdef mutable struct Egs names=[]; funs=Dict() end
+EGS=Egs()
+eg(s,fun) = begin push!(EGS.names,s); EGS.funs[s] = fun end
+go(arg)   = [run(s) for s in EGS.names if arg == split(s)[1]]  
 
 run(s,fun=EGS.funs[split(s)[1]]) = begin 
+  print(s)
+  println(fun)
   global the 
   b4 = deepcopy(the) 
   global rseed = the.seed
@@ -137,23 +141,21 @@ runs() =
     for s in EGS.names println("   julia snap.jl $s") end 
   else  
    [go(arg) for arg in ARGS] end
-
 #-------- --------- --------- --------- --------- --------- ----
-"test fail"
-boom(_::Eg) = false
+eg("boom  : test fail",  () -> 
+  false)
 
-"show the settings"
-settings(_::Eg)= println(the) 
+eg("sets  : show the settings",  () -> 
+  println(the)) 
 
-"print rows in csv file"
-csv(_::Eg) = csv(the.file, r -> println(r)))
+eg("csv   : print rows in csv file", () -> 
+  csv(the.file, (r) -> println(r)))
 
-"print random ints"
-rand(_::Eg) =  
+eg("rand  : print random ints", () ->  begin
   global rseed=1; println(rani(1,10), " ", rnd(ranf(1,10),2))
          rseed=1; println(rani(1,10), " ", rnd(ranf(1,10),2)) end)
 
-("many  : print random items",  () ->  
+eg("many  : print random items",  () ->  
   println(many([10,20,30],4)))
 
 eg("num   : print nums", () -> begin
@@ -181,21 +183,5 @@ eg("order  : print order", () -> begin
    println("baseline ", stats(dt))
    println("best     ", stats(clone(dt,rows[1:m+1])))
    println("rest     ", stats(clone(dt,rows[n-m:n]))) end)
-
-eg("dist  : print dist", () -> begin
-   dt = DATA(the.file) 
-   i=1
-   while i < length(dt.rows)
-    println(rnd(dist(dt, dt.rows[1], dt.rows[i])), "\t", dt.rows[i])
-    i += 60  end end)
-
-eg("around  : print around", () -> begin
-    dt    = DATA(the.file)  
-    rows= around(dt,dt.rows[1])
-    i=1
-    while i < length(rows)
-      println(rnd(dist(dt, dt.rows[1], rows[i])), "\t", rows[i])
-      i += 60  end end )
-
 #-------- --------- --------- --------- --------- --------- ----
 if (abspath(PROGRAM_FILE) == @__FILE__) runs() end
