@@ -27,36 +27,30 @@ OPTIONS:
 
 @kwdef mutable struct Cols 
   klass=nothing; all=[]; x=Dict(); y=Dict(); names=[] end  
-
+ 
 @kwdef mutable struct Data rows=[]; cols=nothing end
 #-------- --------- --------- --------- --------- --------- ----
 COL(s=" ",n=0) = (occursin(r"^[A-Z]", s) ? NUM : SYM)(s,n) 
 SYM(s=" ",n=0) = Sym(at=n, txt=s) 
-NUM(s=" ",n=0) = begin 
-  num = Num(at=n, txt=s)
-  num.heaven = s[end]=="-" ? 0 : 1
-  num end
+NUM(s=" ",n=0) = Num(at=n, txt=s, heaven= s[end]=="-" ? 0 : 1)
 #-------- --------- --------- --------- --------- --------- ----
 adds!(x, v::Vector) = begin [add!(x,y) for y in v]; x end
 
-
 add!(sym::Sym, x) = begin sym.n+=1; sym.has[x]=get(sym.has,x,0) + 1 end
 add!(num::Num, x::Number) = begin 
-  n    += 1
+  num.n += 1
   d     = x - num.mu
   num.mu += d / num.n
   num.m2 += d * (x -  num.mu)
   num.sd  =  num.n > 1 ? (num.m2 / (num.n - 1))^.5 : 0
-  num.min = min(x, num.min)
-  num.max = max(x, num.max) end
+  num.lo = min(x, num.lo)
+  num.hi = max(x, num.hi) end
 
 often(num::Num) = num.mu
 often(sym::Sym) = findmax(sym.has)[2]
 
 spread(num::Num) = num.sd
-spread(sym::Sym) = begin
-  N = sum(n for (_,n) in sym.has if n>0)
-  - sum(n/N*log2(n/N) for (_,n) in sym.has if n>0) end
+spread(sym::Sym) = - sum(n/sym.n*log2(n/sym.n) for (_,n) in sym.has if n>0) 
 
 norm(_, x)  = x 
 norm(num::Num, x::Number) = (x - num.lo) / (num.hi - num.lo + 1E-30)
