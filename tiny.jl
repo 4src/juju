@@ -1,5 +1,5 @@
 #!/usr/bin/env julia --compile=min --optimize=0
-# my code convetion:  
+# my code convention:  
 # `xxx = XXX()` uses the `XXX()`` constructor to create a variable of type `Xxx``.
 # e.g.  `sym = SYM()`` creates `sym`, a variable of type `Sym``.
 about="
@@ -34,9 +34,8 @@ COL(s=" ",n=0) = (occursin(r"^[A-Z]", s) ? NUM : SYM)(s,n)
 SYM(s=" ",n=0) = Sym(at=n, txt=s) 
 NUM(s=" ",n=0) = Num(at=n, txt=s, heaven= s[end]=="-" ? 0 : 1)
 #-------- --------- --------- --------- --------- --------- ----
-adds!(x, v::Vector) = begin [add!(x,y) for y in v]; x end
 
-add!(sym::Sym, x) = begin sym.n+=1; sym.has[x]=get(sym.has,x,0) + 1 end #command 
+add!(sym::Sym, x) = begin sym.n+=1; sym.has[x]=get(sym.has,x,0) + 1 end 
 add!(num::Num, x::Number) = begin 
   num.n += 1
   d     = x - num.mu
@@ -65,8 +64,7 @@ COLS(v::Vector) = begin
 #-------- --------- --------- --------- --------- --------- ----
 DATA(x) = adds!(Data(),x)
 
-adds!(data::Data, v::Vector) = [add!(data,r) for r in v]
-adds!(data::Data, file)      = csv(file, r->add!(data,r))
+adds!(data::Data, file::String) = csv(file, r->add!(data,r))
 
 add!(data::Data, v::Vector) = 
   if data.cols === nothing data.cols=COLS(v) else  
@@ -82,6 +80,7 @@ d2h(data::Data, v::Vector) = begin
     n += 1 end 
   (d/n) ^ .5 end
 #-------- --------- --------- --------- --------- --------- ----
+adds!(x, v::Vector) = begin [add!(x,y) for y in v]; x end
 int(n::Number) = floor(Int,n)
 rnd(x,n=3)     = round(x,sigdigits=n)
 
@@ -115,9 +114,7 @@ cli(d::Dict) = begin
     for (argv,flag) in enumerate(ARGS)  
       if flag in ["-"*s[1],  "--"*s] 
         d[k] = v==true  ? false : (
-               v==false ? true  : what(ARGS[argv+1])) 
-        #print(k," ",v," ", d[k])
-              end end end 
+               v==false ? true  : what(ARGS[argv+1])) end end end 
   d end
 
 #-------- --------- --------- --------- --------- --------- ----
