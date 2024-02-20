@@ -36,7 +36,7 @@ NUM(s=" ",n=0) = Num(at=n, txt=s, heaven= s[end]=="-" ? 0 : 1)
 #-------- --------- --------- --------- --------- --------- ----
 adds!(x, v::Vector) = begin [add!(x,y) for y in v]; x end
 
-add!(sym::Sym, x) = begin sym.n+=1; sym.has[x]=get(sym.has,x,0) + 1 end
+add!(sym::Sym, x) = begin sym.n+=1; sym.has[x]=get(sym.has,x,0) + 1 end #command 
 add!(num::Num, x::Number) = begin 
   num.n += 1
   d     = x - num.mu
