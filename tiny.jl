@@ -19,8 +19,7 @@ OPTIONS:
   -s --seed   random number seed       = 937162211"
 
 @kwdef mutable struct Num
-  at=0; txt=""; n=0; mu=0; m2=0; sd=0; 
-  lo=1E-30; hi= -1E-30; heaven = 1 end
+  at=0; txt=""; n=0; mu=0; m2=0; sd=0; lo=1E-30; hi= -1E-30; heaven=1 end
 
 @kwdef mutable struct Sym
   at=0; txt=""; n=0; has=Dict() end
@@ -34,7 +33,6 @@ COL(s=" ",n=0) = (occursin(r"^[A-Z]", s) ? NUM : SYM)(s,n)
 SYM(s=" ",n=0) = Sym(at=n, txt=s) 
 NUM(s=" ",n=0) = Num(at=n, txt=s, heaven= s[end]=="-" ? 0 : 1)
 #-------- --------- --------- --------- --------- --------- ----
-
 add!(sym::Sym, x) = begin sym.n+=1; sym.has[x]=get(sym.has,x,0) + 1 end 
 add!(num::Num, x::Number) = begin 
   num.n += 1
@@ -64,7 +62,8 @@ COLS(v::Vector) = begin
 #-------- --------- --------- --------- --------- --------- ----
 DATA(x) = adds!(Data(),x)
 
-adds!(data::Data, file::String) = csv(file, r->add!(data,r))
+adds!(x, lst)           = begin [add!(x,y) for y in lst]; x end
+adds!(data::Data, file) = begin csv(file, r->add!(data,r)); data end
 
 add!(data::Data, v::Vector) = 
   if data.cols === nothing data.cols=COLS(v) else  
@@ -80,7 +79,6 @@ d2h(data::Data, v::Vector) = begin
     n += 1 end 
   (d/n) ^ .5 end
 #-------- --------- --------- --------- --------- --------- ----
-adds!(x, v::Vector) = begin [add!(x,y) for y in v]; x end
 int(n::Number) = floor(Int,n)
 rnd(x,n=3)     = round(x,sigdigits=n)
 
@@ -116,7 +114,14 @@ cli(d::Dict) = begin
         d[k] = v==true  ? false : (
                v==false ? true  : what(ARGS[argv+1])) end end end 
   d end
-
+ 
+oo(i) = println(o(i)) 
+o(i) = begin
+  s,pre="$(typeof(i)){",""
+  for f in sort!([x for x in fieldnames(typeof(i)) if !("$x"[1] == '_')])
+    s   = s * pre * "$f=$(getfield(i,f))"
+    pre = ", " end
+  s * "}" end
 #-------- --------- --------- --------- --------- --------- ----
 eg=Dict()
 
