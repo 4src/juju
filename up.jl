@@ -26,14 +26,15 @@ OPTIONS:
 @kwdef mutable struct Num
   at=0; txt=""; n=0; mu=0; m2=0; sd=0; lo=1E-30; hi= -1E-30; heaven=1 end
 
-# ### Symbolic Columns
+# ### `Sym` = Symbolic Columns
 @kwdef mutable struct Sym
   at=0; txt=""; n=0; has=Dict() end
 
-# 
+# ### `Cols` = Factory for making and storing `Num`s or `Sym`s
 @kwdef mutable struct Cols 
   klass=nothing; all=[]; x=Dict(); y=Dict(); names=[] end  
  
+# ### `Data` = storage for rows and cols
 @kwdef mutable struct Data rows=[]; cols=nothing end
 #-------- --------- --------- --------- --------- --------- ----
 COL(s=" ",n=0) = (occursin(r"^[A-Z]", s) ? NUM : SYM)(s,n) 
