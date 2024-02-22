@@ -19,6 +19,9 @@ julia:
 packages: ## install julia packages:
 	julia -e 'using Pkg; Pkg.add("Parameters"); Pkg.add("ResumableFunctions")'
 
+docs/%.md : %.jl
+	gawk -f etc/jl2md2.awk $^ > $@
+
 ~/tmp/%.ps : %.jl
 	@mkdir -p ~/tmp
 	@echo "ps-ing $1 ... "

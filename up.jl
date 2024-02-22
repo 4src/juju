@@ -1,9 +1,7 @@
 #!/usr/bin/env julia --compile=min --optimize=0
-# my code convention:  
-# `xxx = XXX()` uses the `XXX()`` constructor to create a variable of type `Xxx``.
-# e.g.  `sym = SYM()`` creates `sym`, a variable of type `Sym``.
+# ## Options
 about="
-up.jl: smo
+up.jl: smos
 (c)2024 Tim Menzies <timm@ieee.org>, BSD-2 license
      
 OPTIONS:
@@ -18,12 +16,21 @@ OPTIONS:
   -r --reuse  do npt reuse parent node = true
   -s --seed   random number seed       = 937162211"
 
+# ## Structs
+# This  code convention:  
+# 
+# - `xxx = XXX()` uses the `XXX()`` constructor to create a variable of type `Xxx``.
+# - e.g.  `sym = SYM()`` creates `sym`, a variable of type `Sym``.
+# 
+# ### `Num`= Numeric Columns
 @kwdef mutable struct Num
   at=0; txt=""; n=0; mu=0; m2=0; sd=0; lo=1E-30; hi= -1E-30; heaven=1 end
 
+# ### Symbolic Columns
 @kwdef mutable struct Sym
   at=0; txt=""; n=0; has=Dict() end
 
+# 
 @kwdef mutable struct Cols 
   klass=nothing; all=[]; x=Dict(); y=Dict(); names=[] end  
  
