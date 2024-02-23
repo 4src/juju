@@ -8,6 +8,8 @@ just label enough to build a model that selects for the better items.
 -  Label eveything in `todo`.
 -  For a limited number of times do:
    - Label and sort `done` into `best` and `rest`. 
+   - Build a model that can recognize `best` and `rest`
+     - Here we are use a simple Naive Bayes classifier.
    - For everything in `todo`,find the item that has
      - max likelihood of being in `best`;
      - and min likelihood of being in `rest`.
