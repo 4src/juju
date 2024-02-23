@@ -1,6 +1,10 @@
 #!/usr/bin/env julia --compile=min --optimize=0
 
 "# `up.jl` = very simple sequential model optimization
+  
+<img align=right width=400
+     src='https://miro.medium.com/v2/resize:fit:846/1*und5wL5DogTb8zkyOaFmrA.png'>
+  
 Given `N` items to explore, and not enough time to label them all,
 just label enough to build a model that selects for the better items.
   
