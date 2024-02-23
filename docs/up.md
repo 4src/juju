@@ -287,6 +287,8 @@ function o(i)
 ```
 
 
+## Unit Tests (and Demos)
+Store tests in `eg`:
 
 
 ```julia
@@ -294,13 +296,16 @@ eg=Dict()
 ```
 
 
+Run some test whose label starts with `x`.
 
 
 ```julia
-go(arg) = [run(s) for (s,_) in eg if arg == split(s)[1]]  
+go(x) = [run(s) for (s,_) in eg if x == split(s)[1]]  
 ```
 
 
+Before running  a test, stash the config and reset the random number generator.
+After running them, ensure the config is reset to the stash.
 
 
 ```julia
@@ -314,10 +319,11 @@ function run(s,fun=eg[s])
 ```
 
 
+Upate the global options from the command line. Maybe print the help or run the tests.
 
 
 ```julia
-function runs() 
+function main() 
   global the
   the = cli(the)
   if the.help 
@@ -328,6 +334,7 @@ function runs()
 ```
 
 
+### Demos
 
 
 ```julia
@@ -419,10 +426,11 @@ eg["order  : print order"] = function()
 ```
 
 
+## Start-up
 
 
 ```julia
-if (abspath(PROGRAM_FILE) == @__FILE__) runs() end
+if (abspath(PROGRAM_FILE) == @__FILE__) main() end
 ```
 
 

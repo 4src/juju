@@ -176,9 +176,17 @@ function o(i)
     pre = ", " end
   s * "}" end 
 
+"## Unit Tests (and Demos)
+Store tests in `eg`:"
+
 eg=Dict()
 
-go(arg) = [run(s) for (s,_) in eg if arg == split(s)[1]]  
+"Run some test whose label starts with `x`."
+
+go(x) = [run(s) for (s,_) in eg if x == split(s)[1]]  
+
+"Before running  a test, stash the config and reset the random number generator.
+After running them, ensure the config is reset to the stash."
 
 function run(s,fun=eg[s]) 
   global the 
@@ -188,7 +196,9 @@ function run(s,fun=eg[s])
   the = deepcopy(b4)
   out end
 
-function runs() 
+"Upate the global options from the command line. Maybe print the help or run the tests."
+
+function main() 
   global the
   the = cli(the)
   if the.help 
@@ -196,6 +206,8 @@ function runs()
     [println("  ./up.jl  $s") for s in sort([s for (s,_) in eg])]
   else        
     [go(arg) for arg in ARGS] end  end
+
+"### Demos"
 
 eg["boom   : handle a crash"] = function() false end
 
@@ -238,4 +250,6 @@ eg["order  : print order"] = function()
    println("best     ", stats(clone(dt,rows[1:m+1])))
    println("rest     ", stats(clone(dt,rows[n-m:n]))) end
 
-if (abspath(PROGRAM_FILE) == @__FILE__) runs() end
+"## Start-up"
+
+if (abspath(PROGRAM_FILE) == @__FILE__) main() end
