@@ -6,5 +6,4 @@ NR==1 { next }
         } else {
           print "\n\n```julia"
           print $0
-          print "```\n\n"
-      }}
+          print "```\n\n" }}

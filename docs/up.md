@@ -5,7 +5,7 @@
 about="
 up.jl: smos
 (c)2024 Tim Menzies <timm@ieee.org>, BSD-2 license
-      
+  
 OPTIONS:
   -b --bins   initial number of bins   = 16
   -C --Cohen  too small                = .35
@@ -17,16 +17,17 @@ OPTIONS:
   -p --p      distance coefficient     = 2
   -r --reuse  do npt reuse parent node = true
   -s --seed   random number seed       = 937162211"
-```
-
-
-## Structs
-This  code convention:  
   
+"## Structs
+This  code convention:  
+   
 - `xxx = XXX()` uses the `XXX()`` constructor to create a variable of type `Xxx``.
 - e.g.  `sym = SYM()`` creates `sym`, a variable of type `Sym``.
   
-## `Num`= Numeric columns
+`Num`= Numeric columns."
+```
+
+
 
 
 ```julia
@@ -35,7 +36,7 @@ This  code convention:
 ```
 
 
-`Sym` = Symbolic columns
+`Sym` = Symbolic columns.
 
 
 ```julia
@@ -44,17 +45,16 @@ This  code convention:
 ```
 
 
-`Cols` = Factory for making and storing `Num`s or `Sym`s
+`Cols` = Factory for making and storing `Num`s or `Sym`s.
 
 
 ```julia
 @kwdef mutable struct Cols 
-  klass=nothing; all=[]; x=Dict(); y=Dict(); names=[] end  
- 
-"`Data` = storage for rows and cols"
+  klass=nothing; all=[]; x=Dict(); y=Dict(); names=[] end
 ```
 
 
+`Data` = storage for rows and cols.
 
 
 ```julia
@@ -116,7 +116,7 @@ norm(num::Num, x::Number) = (x - num.lo) / (num.hi - num.lo + 1E-30)
 ```
 
 
-Columns factor
+Columns factor.
 
 
 ```julia
@@ -205,7 +205,12 @@ the=(;Dict(Symbol(k)=>what(v)
 
 ```julia
 shuffle!(v::Vector) = sort(v, by= _ -> rani(1,100000))
-              
+```
+
+
+
+
+```julia
 rseed=the.seed
 function rani(lo::Int, hi::Int) int(.5 + ranf(lo,hi)) end
 function ranf(lo=0.0, hi=1.0) 
@@ -239,7 +244,12 @@ function cli(d::Dict)
         d[k] = v==true  ? false : (
                v==false ? true  : what(ARGS[argv+1])) end end end 
   d end
- 
+```
+
+
+
+
+```julia
 oo(i) = println(o(i)) 
 ```
 
@@ -301,37 +311,82 @@ function runs()
 
 ```julia
 eg["boom   : handle a crash"] = function() false end
- 
+```
+
+
+
+
+```julia
 eg["sets   : show the settings"] = function() println(the) end
- 
+```
+
+
+
+
+```julia
 eg["csv    : print rows in csv file"] = function()  
   csv(the.file, (r) -> println(r)) end
- 
+```
+
+
+
+
+```julia
 eg["rand   : print random ints"] = function()
   global rseed=1; println(rani(1,10), " ", rnd(ranf(1,10),2))
          rseed=1; println(rani(1,10), " ", rnd(ranf(1,10),2)) end
- 
+```
+
+
+
+
+```julia
 eg["many   : print random items"] = function()   
   println(many([10,20,30],4)) end
- 
+```
+
+
+
+
+```julia
 eg["num    : print nums"] = function()
   v=[]
   incs!(v, [normal(10,2) for _ in 1:1000])
   sort!(v)
   9.8 < often(v) < 10.2 && 1.85 < spread(v) < 2.15 end
- 
+```
+
+
+
+
+```julia
 eg["sym    : print syms"] = function()
   d = Dict() 
   incs!(d, [c for c in "aaaabbc"])
   return 'a'==often(d) && 1.37 < spread(d) < 1.38  end
- 
+```
+
+
+
+
+```julia
 eg["data   : print data"] =  function()
   print(stats(DATA(the.file))) end
- 
+```
+
+
+
+
+```julia
 eg["d2h    : calculate distance to heaven"] = function()
   dt = DATA(the.file) 
   print(d2h(dt,dt.rows[1])) end
- 
+```
+
+
+
+
+```julia
 eg["order  : print order"] = function()
    dt    = DATA(the.file) 
    rows = sort(dt.rows, alg=InsertionSort, by=row -> d2h(dt,row))
