@@ -7,14 +7,17 @@
   
 Given `N` items to explore, and not enough time to label them all,
 just label enough to build a model that selects for the better items.
-  
+   
+To support multi-objective optimization, this code sorts items by
+`distance to heaven`; i.e. the Euclidean distance of an item's multiple
+goals to `heaven` (the ideal values for each goal).
+    
 -  Divide the items into `todo` and `done` 
    - where `done` is very small (say, 4)
    - and `todo` is all the rest.
 -  Label eveything in `todo`.
 -  For a limited number of times do:
-   - Label and sort `done` into `best` and `rest`. 
-     - Sort by distance to ideal goal values.
+   - Label and sort `done` into `best` and `rest` (using `distance to heaven`); 
    - Build a model that can recognize `best` and `rest`
      - Here we are use a simple Naive Bayes classifier.
    - For everything in `todo`,find the item that has
