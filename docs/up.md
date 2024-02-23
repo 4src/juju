@@ -1,5 +1,4 @@
-# `up.jl` = very simple multi-objective sequential model optimization
-  
+## About
 Given `N` items to explore, and not enough time to label them all,
 find just enough goal labels to build a model that selects for the better items.
    
@@ -61,7 +60,7 @@ This  code uses  two conventions:
 
 
 ```julia
-@kwdef mutable struct Num:w
+@kwdef mutable struct Num
   at=0; txt=""; n=0; mu=0; m2=0; sd=0; lo=1E-30; hi= -1E-30; heaven=1 end
 ```
 
@@ -168,6 +167,7 @@ DATA(x) = adds!(Data(),x)
 ```
 
 
+Add to `DATA`.
 
 
 ```julia
@@ -186,6 +186,7 @@ function add!(data::Data, v::Vector)
 ```
 
 
+Generate a similar structure.
 
 
 ```julia
@@ -193,6 +194,7 @@ clone(data::Data, src=[]) = adds!(DATA([data.cols.names]),src)
 ```
 
 
+Distance to heaven.
 
 
 ```julia
@@ -206,14 +208,23 @@ function d2h(data::Data, v::Vector)
 
 
 ## General Utilities
+Coerce to integer.
 
 
 ```julia
 int(n::Number) = floor(Int,n)
+```
+
+
+Round to (say) 3 digits.
+
+
+```julia
 rnd(x,n=3)     = round(x,sigdigits=n)
 ```
 
 
+Coerce strings to some type.
 
 
 ```julia
@@ -224,6 +235,7 @@ function what(s)
 ```
 
 
+Parse `about` to build `the` global settings.
 
 
 ```julia
@@ -232,6 +244,7 @@ the=(;Dict(Symbol(k)=>what(v)
 ```
 
 
+Randomly sort a list.
 
 
 ```julia
@@ -239,6 +252,7 @@ shuffle!(v::Vector) = sort(v, by= _ -> rani(1,100000))
 ```
 
 
+Generate random numbers based on `rseed`.
 
 
 ```julia
@@ -250,6 +264,7 @@ function ranf(lo=0.0, hi=1.0)
 ```
 
 
+Return one row per csv line.
 
 
 ```julia
@@ -262,11 +277,21 @@ function csv(sfile, fun::Function)
 ```
 
 
+Update named fields from command-line.
 
 
 ```julia
 function cli(nt::NamedTuple) 
   (;cli(Dict(pairs(nt)))...) end
+```
+
+
+Update  the dictionary field `xx` from any
+CLI flaog `-x`. If the old field is a boolean,
+we do not need an argument (we just swith the old value.
+
+
+```julia
 function cli(d::Dict) 
   for (k,v) in d 
     s=String(k) 
@@ -278,6 +303,7 @@ function cli(d::Dict)
 ```
 
 
+Pretty print.
 
 
 ```julia
@@ -285,6 +311,8 @@ oo(i) = println(o(i))
 ```
 
 
+Print with sorted fields, ignoring private fields
+(those starting with `_`.
 
 
 ```julia
@@ -323,7 +351,7 @@ function run(s,fun=eg[s])
   global the 
   b4 = deepcopy(the) 
   global rseed = the.seed
-  if (out = fun() == false) println("❌ FAIL : $s") end
+  if (out = fun() == false) println("X FAIL : $s") end
   the = deepcopy(b4)
   out end
 ```
@@ -362,8 +390,10 @@ eg["sets   : show the settings"] = function() println(the) end
 
 
 ```julia
-eg["csv    : print rows in csv file"] = function()  
-  csv(the.file, (r) -> println(r)) end
+eg["csv    : print rows in csv file"] = function() 
+  n = 0
+  csv(the.file, (r) -> n += length(r)) 
+  n == 3192 end
 ```
 
 
@@ -371,8 +401,9 @@ eg["csv    : print rows in csv file"] = function()
 
 ```julia
 eg["rand   : print random ints"] = function()
-  global rseed=1; println(rani(1,10), " ", rnd(ranf(1,10),2))
-         rseed=1; println(rani(1,10), " ", rnd(ranf(1,10),2)) end
+  global rseed=1; i1 = rani(1,10); f1=rnd(ranf(1,10),2)
+         rseed=1; i2 = rani(1,10); f2=rnd(ranf(1,10),2) 
+         i1==i2 && f1==f2 end
 ```
 
 
@@ -380,7 +411,7 @@ eg["rand   : print random ints"] = function()
 
 ```julia
 eg["many   : print random items"] = function()   
-  println(many([10,20,30],4)) end
+  println(shuffle!([10,20,30,40,50,60,70,80,90])) end
 ```
 
 

@@ -20,6 +20,18 @@ docs/%.md : %.jl
 	echo "# $^ ==> $@"
 	gawk -f etc/jl2md.awk $^ > $@
 
+~/tmp/%.pdf : docs/%.md
+	echo "# $^ ==> $@"
+	pandoc "$^" \
+	    -f gfm \
+			--toc \
+		-V toc-title:"$^" \
+  	  -V geometry:margin=2cm \
+		-V fontsize=10pt \
+		-V 'fontfamily:dejavu' \
+		--highlight-style tango \
+		-o "$@"
+
 ~/tmp/%.pdf   : %.jl  ## jl ==> pdf
 	mkdir -p ~/tmp
 	echo "$@" 
