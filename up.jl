@@ -17,7 +17,7 @@ OPTIONS:
   -p --p      distance coefficient     = 2
   -r --reuse  do npt reuse parent node = true
   -s --seed   random number seed       = 937162211"
-  
+
 "## Structs
 This  code convention:  
    

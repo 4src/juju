@@ -17,17 +17,16 @@ OPTIONS:
   -p --p      distance coefficient     = 2
   -r --reuse  do npt reuse parent node = true
   -s --seed   random number seed       = 937162211"
-  
-"## Structs
+```
+
+
+## Structs
 This  code convention:  
    
 - `xxx = XXX()` uses the `XXX()`` constructor to create a variable of type `Xxx``.
 - e.g.  `sym = SYM()`` creates `sym`, a variable of type `Sym``.
   
-`Num`= Numeric columns."
-```
-
-
+`Num`= Numeric columns.
 
 
 ```julia
