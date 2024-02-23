@@ -2,7 +2,7 @@
 
 "# `up.jl` = very simple multi-objective sequential model optimization
   
-<img align=right width=400
+<img align=right width=600
      src='https://miro.medium.com/v2/resize:fit:846/1*und5wL5DogTb8zkyOaFmrA.png'>
   
 Given `N` items to explore, and not enough time to label them all,
@@ -26,6 +26,8 @@ Then:
      - max likelihood of being in `best`;
      - and min likelihood of being in `rest`.
    - Move that item from `todo` to `done`, and label all its goals. 
+  
+Return the best item in `best`.
    
 ## Options"
 
