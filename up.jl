@@ -1,6 +1,6 @@
 #!/usr/bin/env julia --compile=min --optimize=0
 
-"# `up.jl` = very simple sequential model optimization
+"# `up.jl` = very simple multi-objective sequential model optimization
   
 <img align=right width=400
      src='https://miro.medium.com/v2/resize:fit:846/1*und5wL5DogTb8zkyOaFmrA.png'>
@@ -14,6 +14,7 @@ just label enough to build a model that selects for the better items.
 -  Label eveything in `todo`.
 -  For a limited number of times do:
    - Label and sort `done` into `best` and `rest`. 
+     - Sort by distance to ideal goal values.
    - Build a model that can recognize `best` and `rest`
      - Here we are use a simple Naive Bayes classifier.
    - For everything in `todo`,find the item that has
