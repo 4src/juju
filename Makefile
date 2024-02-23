@@ -11,11 +11,15 @@ saved         : ## save and push to main branch
 	read -p "commit msg> " x; y=$${x:-saved}; git commit -am "$$y}"; git push;  git status; echo "$$y, saved!"
  
 
-FILES=$(wildcard *.py)
+FILES=$(wildcard *.jl)
 docs: 
-	echo "docs..."
-	$(MAKE) -B $(addprefix ~/tmp/, $(FILES:.py=.pdf))  $(addprefix ../docs/, $(FILES:.py=.html))
+	$(MAKE) -B $(addprefix docs/, $(FILES:.jl=.md))
  
+
+docs/%.md : %.jl
+	echo "# $^ ==> $@"
+	gawk -f etc/jl2md.awk $^ > $@
+
 ~/tmp/%.pdf   : %.jl  ## jl ==> pdf
 	mkdir -p ~/tmp
 	echo "$@" 

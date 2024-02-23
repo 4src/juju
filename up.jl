@@ -1,6 +1,21 @@
 #!/usr/bin/env julia --compile=min --optimize=0
 
-"## Options"
+"# `up.jl` = very simple sequential model optimization
+Given `N` items to explore, and not enough time to label them all,
+just label enough to build a model that selects for the better items.
+  
+-  Divide the items into `todo` and `done` 
+   - where `done` is very small (say, 4)
+   - and `todo` is all the rest.
+-  Label eveything in `todo`.
+-  For a limited number of times do:
+   - Label and sort `done` into `best` and `rest`. 
+   - For everything in `todo`,find the item that has
+     - max likelihood of being in `best`;
+     - and min likelihood of being in `rest`.
+   - Move that item from `todo` to `done`, and label it. 
+   
+## Options"
 
 about="
 up.jl: smos
