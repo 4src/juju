@@ -40,11 +40,14 @@ OPTIONS:
   -r --reuse  do npt reuse parent node = true
   -s --seed   random number seed       = 937162211"
 
-"## Structs
-This  code convention:  
-   
+"This  code uses  two conventions:  
+     
+- This code uses a global `the` variable to store config information,
+  extracted from the above `about` string.
 - `xxx = XXX()` uses the `XXX()`` constructor to create a variable of type `Xxx``.
-- e.g.  `sym = SYM()`` creates `sym`, a variable of type `Sym``.
+  - e.g.  `sym = SYM()`` creates `sym`, a variable of type `Sym``."
+
+"## Types
   
 `Num`= Numeric columns."
 
@@ -129,6 +132,8 @@ function d2h(data::Data, v::Vector)
     d += (col.heaven - norm(col, v[col.at])) ^ 2 
     n += 1 end 
   (d/n) ^ .5 end
+
+"## General Utilities"
 
 int(n::Number) = floor(Int,n)
 rnd(x,n=3)     = round(x,sigdigits=n)

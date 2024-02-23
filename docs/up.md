@@ -42,11 +42,13 @@ OPTIONS:
 ```
 
 
-## Structs
-This  code convention:  
-   
+This  code uses  two conventions:  
+     
+- This code uses a global `the` variable to store config information,
+  extracted from the above `about` string.
 - `xxx = XXX()` uses the `XXX()`` constructor to create a variable of type `Xxx``.
-- e.g.  `sym = SYM()`` creates `sym`, a variable of type `Sym``.
+  - e.g.  `sym = SYM()`` creates `sym`, a variable of type `Sym``.
+## Types
   
 `Num`= Numeric columns.
 
@@ -196,6 +198,7 @@ function d2h(data::Data, v::Vector)
 ```
 
 
+## General Utilities
 
 
 ```julia
