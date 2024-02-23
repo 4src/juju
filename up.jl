@@ -1,18 +1,16 @@
 #!/usr/bin/env julia --compile=min --optimize=0
 
-"## About
+"---
 Given `N` items to explore, and not enough time to label them all,
 find just enough goal labels to build a model that selects for the better items.
-   
 To support multi-objective optimization, this code sorts items by
 `distance to heaven`; i.e. the Euclidean distance of an item's multiple
 goal labels to `heaven` (the ideal values for each goal).
-  
-Then:
-  
+After that, the code:
+   
 <img align=right width=600
      src='https://miro.medium.com/v2/resize:fit:846/1*und5wL5DogTb8zkyOaFmrA.png'>
-      
+       
 -  Divide the `N` items into `todo` and `done` 
    - where `done` is very small (say, 4)
    - and `todo` is all the rest.
@@ -25,15 +23,13 @@ Then:
      - max likelihood of being in `best`;
      - and min likelihood of being in `rest`.
    - Move that item from `todo` to `done`, and label all its goals. 
-  
-Return the best item in `best`.
    
-## Options"
+Return the best item in `best`."
 
-about="
+options="
 up.jl: smos
 (c)2024 Tim Menzies <timm@ieee.org>, BSD-2 license
-  
+
 OPTIONS:
   -b --bins   initial number of bins   = 16
   -C --Cohen  too small                = .35
@@ -49,11 +45,11 @@ OPTIONS:
 "This  code uses  two conventions:  
      
 - This code uses a global `the` variable to store config information,
-  extracted from the above `about` string.
+  extracted from the above `options` string.
 - `xxx = XXX()` uses the `XXX()`` constructor to create a variable of type `Xxx``.
   - e.g.  `sym = SYM()`` creates `sym`, a variable of type `Sym``."
 
-"## Types
+"# Types
   
 `Num`= Numeric columns."
 
@@ -74,7 +70,7 @@ OPTIONS:
 
 @kwdef mutable struct Data rows=[]; cols=nothing end
 
-"## Columns
+"# Columns
 Column constructors."
 
 COL(s=" ",n=0) = (occursin(r"^[A-Z]", s) ? NUM : SYM)(s,n) 
@@ -118,7 +114,7 @@ function COLS(v::Vector)
       push!(occursin(s[end],"!+-") ? cols.y : cols.x, col) end end  
   cols end
 
-"## Data"
+"# Data"
 
 DATA(x) = adds!(Data(),x)
 
@@ -145,7 +141,7 @@ function d2h(data::Data, v::Vector)
     n += 1 end 
   (d/n) ^ .5 end
 
-"## General Utilities"
+"# General Utilities"
 
 "Coerce to integer."
 
@@ -162,10 +158,10 @@ function what(s)
     if ((x=tryparse(t,s)) !== nothing) return x end end 
   s end
 
-"Parse `about` to build `the` global settings."
+"Parse `options` to build `the` global settings."
 
 the=(;Dict(Symbol(k)=>what(v) 
-      for (k,v) in eachmatch(r"\n.*--(\S+)[^=]+= *(\S+)",about))...)  
+      for (k,v) in eachmatch(r"\n.*--(\S+)[^=]+= *(\S+)",options))...)  
 
 "Randomly sort a list."
 
@@ -220,7 +216,7 @@ function o(i)
     pre = ", " end
   s * "}" end 
 
-"## Unit Tests (and Demos)
+"# Unit Tests (and Demos)
 Store tests in `eg`:"
 
 eg=Dict()
@@ -246,7 +242,7 @@ function main()
   global the
   the = cli(the)
   if the.help 
-    println(about,"\n\n","ACTIONS:") 
+    println(options,"\n\n","ACTIONS:") 
     [println("  ./up.jl  $s") for s in sort([s for (s,_) in eg])]
   else        
     [go(arg) for arg in ARGS] end  end
@@ -297,6 +293,6 @@ eg["order  : print order"] = function()
    println("best     ", stats(clone(dt,rows[1:m+1])))
    println("rest     ", stats(clone(dt,rows[n-m:n]))) end
 
-"## Start-up"
+"# Start-up"
 
 if (abspath(PROGRAM_FILE) == @__FILE__) main() end

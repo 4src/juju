@@ -1,16 +1,14 @@
-## About
+---
 Given `N` items to explore, and not enough time to label them all,
 find just enough goal labels to build a model that selects for the better items.
-   
 To support multi-objective optimization, this code sorts items by
 `distance to heaven`; i.e. the Euclidean distance of an item's multiple
 goal labels to `heaven` (the ideal values for each goal).
-  
-Then:
-  
+After that, the code:
+   
 <img align=right width=600
      src='https://miro.medium.com/v2/resize:fit:846/1*und5wL5DogTb8zkyOaFmrA.png'>
-      
+       
 -  Divide the `N` items into `todo` and `done` 
    - where `done` is very small (say, 4)
    - and `todo` is all the rest.
@@ -23,17 +21,20 @@ Then:
      - max likelihood of being in `best`;
      - and min likelihood of being in `rest`.
    - Move that item from `todo` to `done`, and label all its goals. 
-  
-Return the best item in `best`.
    
-## Options
+Return the best item in `best`.
 
 
 ```julia
-about="
+options="
 up.jl: smos
 (c)2024 Tim Menzies <timm@ieee.org>, BSD-2 license
-  
+```
+
+
+
+
+```julia
 OPTIONS:
   -b --bins   initial number of bins   = 16
   -C --Cohen  too small                = .35
@@ -51,10 +52,10 @@ OPTIONS:
 This  code uses  two conventions:  
      
 - This code uses a global `the` variable to store config information,
-  extracted from the above `about` string.
+  extracted from the above `options` string.
 - `xxx = XXX()` uses the `XXX()`` constructor to create a variable of type `Xxx``.
   - e.g.  `sym = SYM()`` creates `sym`, a variable of type `Sym``.
-## Types
+# Types
   
 `Num`= Numeric columns.
 
@@ -91,7 +92,7 @@ This  code uses  two conventions:
 ```
 
 
-## Columns
+# Columns
 Column constructors.
 
 
@@ -159,7 +160,7 @@ function COLS(v::Vector)
 ```
 
 
-## Data
+# Data
 
 
 ```julia
@@ -207,7 +208,7 @@ function d2h(data::Data, v::Vector)
 ```
 
 
-## General Utilities
+# General Utilities
 Coerce to integer.
 
 
@@ -235,12 +236,12 @@ function what(s)
 ```
 
 
-Parse `about` to build `the` global settings.
+Parse `options` to build `the` global settings.
 
 
 ```julia
 the=(;Dict(Symbol(k)=>what(v) 
-      for (k,v) in eachmatch(r"\n.*--(\S+)[^=]+= *(\S+)",about))...)  
+      for (k,v) in eachmatch(r"\n.*--(\S+)[^=]+= *(\S+)",options))...)  
 ```
 
 
@@ -325,7 +326,7 @@ function o(i)
 ```
 
 
-## Unit Tests (and Demos)
+# Unit Tests (and Demos)
 Store tests in `eg`:
 
 
@@ -365,7 +366,7 @@ function main()
   global the
   the = cli(the)
   if the.help 
-    println(about,"\n\n","ACTIONS:") 
+    println(options,"\n\n","ACTIONS:") 
     [println("  ./up.jl  $s") for s in sort([s for (s,_) in eg])]
   else        
     [go(arg) for arg in ARGS] end  end
@@ -467,7 +468,7 @@ eg["order  : print order"] = function()
 ```
 
 
-## Start-up
+# Start-up
 
 
 ```julia
