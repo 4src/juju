@@ -1,8 +1,5 @@
 # `up.jl` = very simple multi-objective sequential model optimization
   
-<img align=right width=600
-     src='https://miro.medium.com/v2/resize:fit:846/1*und5wL5DogTb8zkyOaFmrA.png'>
-  
 Given `N` items to explore, and not enough time to label them all,
 find just enough goal labels to build a model that selects for the better items.
    
@@ -12,6 +9,9 @@ goal labels to `heaven` (the ideal values for each goal).
   
 Then:
   
+<img align=right width=600
+     src='https://miro.medium.com/v2/resize:fit:846/1*und5wL5DogTb8zkyOaFmrA.png'>
+      
 -  Divide the `N` items into `todo` and `done` 
    - where `done` is very small (say, 4)
    - and `todo` is all the rest.
