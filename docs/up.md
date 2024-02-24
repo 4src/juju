@@ -5,7 +5,7 @@ src="https://img.shields.io/badge/platform-osx,linux-pink">
 
 # Up.jl : simple incremental sequential optimization
 
-Life is short and there is too much to see.  
+Life is short and there is too much to see.
 So how do we make intelligent decisions,
 in the face of limited knowledge?
 
