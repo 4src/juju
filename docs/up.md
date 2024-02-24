@@ -71,13 +71,13 @@ second moment variable `m2` (via the Welford algorithn  [^welford]).
 ```julia <up add!>
 function add!(sym::Sym, x) sym.n+=1; sym.has[x]=1+get(sym.has,x,0) end 
 function add!(num::Num, x::Number) 
-  num.n += 1
-  d     = x - num.mu
+  num.n  += 1
+  d       = x - num.mu
   num.mu += d / num.n
   num.m2 += d * (x -  num.mu)
   num.sd  =  num.n > 1 ? (num.m2 / (num.n - 1))^.5 : 0
-  num.lo = min(x, num.lo)
-  num.hi = max(x, num.hi) end
+  num.lo  = min(x, num.lo)
+  num.hi  = max(x, num.hi) end
 ```
 
 ```julia <up options>
