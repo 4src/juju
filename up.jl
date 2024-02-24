@@ -17,11 +17,10 @@ OPTIONS:
   -r --reuse  do npt reuse parent node = true
   -s --seed   random number seed       = 937162211"
   
-## num
+## numsym
 @kwdef mutable struct Num
   at=0; txt=""; n=0; mu=0; m2=0; sd=0; lo=1E-30; hi= -1E-30; heaven=1 end
 
-## sym 
 @kwdef mutable struct Sym
   at=0; txt=""; n=0; has=Dict() end
 
@@ -33,15 +32,12 @@ OPTIONS:
 
 @kwdef mutable struct Data rows=[]; cols=nothing end
 
-"# Columns
-Column constructors."
-
+## col
 COL(s=" ",n=0) = (occursin(r"^[A-Z]", s) ? NUM : SYM)(s,n) 
-SYM(s=" ",n=0) = Sym(at=n, txt=s) 
+SYM(s=" ",n=0) = Sym(at=n, txt=s, has=Dict(_)) 
 NUM(s=" ",n=0) = Num(at=n, txt=s, heaven= s[end]=="-" ? 0 : 1)
 
-"Column updates."
-
+## add!
 function add!(sym::Sym, x) sym.n+=1; sym.has[x]=1+get(sym.has,x,0) end 
 function add!(num::Num, x::Number) 
   num.n += 1
@@ -52,8 +48,7 @@ function add!(num::Num, x::Number)
   num.lo = min(x, num.lo)
   num.hi = max(x, num.hi) end
 
-"Column middle values."
-
+# often
 often(num::Num) = num.mu
 often(sym::Sym) = findmax(sym.has)[2]
 
@@ -67,8 +62,7 @@ spread(sym::Sym) = - sum(n/sym.n*log2(n/sym.n) for (_,n) in sym.has if n>0)
 norm(_, x)  = x 
 norm(num::Num, x::Number) = (x - num.lo) / (num.hi - num.lo + 1E-30)
 
-"Columns factor."
-
+## cols
 function COLS(v::Vector) 
   cols = Cols(names=v, all= [COL(s,n) for (n,s) in enumerate(v)])
   for (n,(s,col)) in enumerate(zip(v,cols.all))
