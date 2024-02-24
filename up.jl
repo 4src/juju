@@ -1,31 +1,6 @@
 #!/usr/bin/env julia --compile=min --optimize=0
 
-"---
-Given `N` items to explore, and not enough time to label them all,
-find just enough goal labels to build a model that selects for the better items.
-To support multi-objective optimization, this code sorts items by
-`distance to heaven`; i.e. the Euclidean distance of an item's multiple
-goal labels to `heaven` (the ideal values for each goal).
-After that, the code:
-   
-<img align=right width=600
-     src='https://miro.medium.com/v2/resize:fit:846/1*und5wL5DogTb8zkyOaFmrA.png'>
-       
--  Divide the `N` items into `todo` and `done` 
-   - where `done` is very small (say, 4)
-   - and `todo` is all the rest.
--  Label all the goals for eveything in `todo`.
--  For a limited number of times do:
-   - Sort `done` into `best` and `rest` (using `distance to heaven`); 
-   - Build a model that can recognize `best` and `rest`
-     - Here we are use a simple Naive Bayes classifier.
-   - For everything in `todo`,find the item that has
-     - max likelihood of being in `best`;
-     - and min likelihood of being in `rest`.
-   - Move that item from `todo` to `done`, and label all its goals. 
-   
-Return the best item in `best`."
-
+## options
 options="
 up.jl: smos
 (c)2024 Tim Menzies <timm@ieee.org>, BSD-2 license
@@ -41,28 +16,16 @@ OPTIONS:
   -p --p      distance coefficient     = 2
   -r --reuse  do npt reuse parent node = true
   -s --seed   random number seed       = 937162211"
-
-"This  code uses  two conventions:  
-     
-- This code uses a global `the` variable to store config information,
-  extracted from the above `options` string.
-- `xxx = XXX()` uses the `XXX()`` constructor to create a variable of type `Xxx``.
-  - e.g.  `sym = SYM()`` creates `sym`, a variable of type `Sym``."
-
-"# Types
   
-`Num`= Numeric columns."
-
+## num
 @kwdef mutable struct Num
   at=0; txt=""; n=0; mu=0; m2=0; sd=0; lo=1E-30; hi= -1E-30; heaven=1 end
 
-"`Sym` = Symbolic columns."
-
+## sym 
 @kwdef mutable struct Sym
   at=0; txt=""; n=0; has=Dict() end
 
-"`Cols` = Factory for making and storing `Num`s or `Sym`s."
-
+## cols
 @kwdef mutable struct Cols 
   klass=nothing; all=[]; x=Dict(); y=Dict(); names=[] end
 
@@ -132,8 +95,7 @@ function add!(data::Data, v::Vector)
 
 clone(data::Data, src=[]) = adds!(DATA([data.cols.names]),src) 
 
-"Distance to heaven."
-
+## d2h  
 function d2h(data::Data, v::Vector) 
   d,n  = 0,0
   for (n,col) in data.cols.y 
@@ -141,7 +103,7 @@ function d2h(data::Data, v::Vector)
     n += 1 end 
   (d/n) ^ .5 end
 
-"# General Utilities"
+## General Utilities
 
 "Coerce to integer."
 

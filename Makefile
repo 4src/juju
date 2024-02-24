@@ -16,9 +16,15 @@ docs:
 	$(MAKE) -B $(addprefix docs/, $(FILES:.jl=.md))
  
 
-docs/%.md : %.jl
-	echo "# $^ ==> $@"
-	gawk -f etc/jl2md.awk $^ > $@
+BODY='BEGIN {RS=""; FS="\n"} NR==1 { next } { print($$0 "\n")  }'
+HEAD='BEGIN {RS=""; FS="\n"} NR==1 { print($$0 "\n"); exit }'
+
+docs/%.md: %.jl
+	echo "# filling in $@ ..."
+	gawk --source $(HEAD) README.md >  _in
+	gawk --source $(BODY) $@                  >> _in
+	gawk -f etc/snips.awk PASS=1 $^  PASS=2 _in > _out
+	mv _out $@; rm _in
 
 ~/tmp/%.pdf : docs/%.md
 	echo "# $^ ==> $@"
