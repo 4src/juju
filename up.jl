@@ -71,11 +71,8 @@ function COLS(v::Vector)
       push!(occursin(s[end],"!+-") ? cols.y : cols.x, col) end end  
   cols end
 
-"# Data"
-
+## data
 DATA(x) = adds!(Data(),x)
-
-"Add to `DATA`."
 
 adds!(x, lst)           = begin [add!(x,y) for y in lst]; x end
 adds!(data::Data, file) = begin csv(file, r->add!(data,r)); data end
@@ -85,8 +82,7 @@ function add!(data::Data, v::Vector)
     [add!!(col,x) for (col,x) in zip(data.cols.all, v) if x != "?"]
     push!(data.rows, v) end end
 
-"Generate a similar structure."
-
+## clone
 clone(data::Data, src=[]) = adds!(DATA([data.cols.names]),src) 
 
 ## d2h  
@@ -106,13 +102,8 @@ int(n::Number) = floor(Int,n)
 "Round to (say) 3 digits."
 
 rnd(x,n=3)     = round(x,sigdigits=n)
+ 
 
-"Coerce strings to some type."
-
-function what(s) 
-  for t in [Int32,Float64,Bool] 
-    if ((x=tryparse(t,s)) !== nothing) return x end end 
-  s end
 
 "Parse `options` to build `the` global settings."
 
@@ -131,8 +122,12 @@ function ranf(lo=0.0, hi=1.0)
   global rseed = (16807 * rseed) % 214748347 
   lo + (hi - lo) * rseed / 214748347 end
 
-"Return one row per csv line."
-
+## coerce
+function what(s) 
+  for t in [Int32,Float64,Bool] 
+    if ((x=tryparse(t,s)) !== nothing) return x end end 
+  s end
+  
 function csv(sfile, fun::Function) 
   src = open(sfile)
   while ! eof(src)
@@ -140,7 +135,7 @@ function csv(sfile, fun::Function)
     if sizeof(new) != 0
       fun(map(what,split(new,","))) end end end
 
-"Update named fields from command-line."
+## cli 
 
 function cli(nt::NamedTuple) 
   (;cli(Dict(pairs(nt)))...) end

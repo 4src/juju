@@ -41,13 +41,14 @@ function d2h(data::Data, v::Vector)
 ```
 
 ## Data Model
-For that to work, when we read in a csv data file, we need to fill in some  details  e.g. (a) what are the $y$ values (used in `data.cols.y`) and (b) what is heaven for each $y$ goal (used in `col.heaven`). To make that work, the column names (on line one
+### Columns are `Num`s or `Sym`s
+For the above `d2h`  code to  work, when we read in a csv data file, we need to fill in some  details  e.g. (a) what are the $y$ values (used in `data.cols.y`) and (b) what is heaven for each $y$ goal (used in `col.heaven`). To make that work, the column names (on line one
 of the csv file) have some special symbols:
 
-- Anything starting with an upper-case letter (like `Age`) is a `Num`eric;
-- Anything ending with `+`,`-` is a $y$ goal to be maximized
+- Any column name starting with an upper-case letter (like `Age`) is a `Num`eric;
+- Any column name ending with `+`,`-` is a $y$ goal to be maximized
   or minimized (respectively);
-- `Heaven` for maximal goals  is 1 (and for minimal goals, `heaven` is 0).
+- For $y$ goals we want to minimize/maximize, `Heaven` is 0,1.
 
 ```julia <up col>
 COL(s=" ",n=0) = (occursin(r"^[A-Z]", s) ? NUM : SYM)(s,n) 
@@ -79,6 +80,10 @@ function add!(num::Num, x::Number)
   num.lo  = min(x, num.lo)
   num.hi  = max(x, num.hi) end
 ```
+
+### `Data` stores columns and rows
+
+### `Data` comes from  csv files, or other `Data`
 
 ```julia <up options>
 options="
