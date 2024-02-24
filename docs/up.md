@@ -51,7 +51,7 @@ of the csv file) have some special symbols:
 
 ```julia <up col>
 COL(s=" ",n=0) = (occursin(r"^[A-Z]", s) ? NUM : SYM)(s,n) 
-SYM(s=" ",n=0) = Sym(at=n, txt=s) 
+SYM(s=" ",n=0) = Sym(at=n, txt=s, has=Dict(_)) 
 NUM(s=" ",n=0) = Num(at=n, txt=s, heaven= s[end]=="-" ? 0 : 1)
 ```
 In the above `s`and `n` are the name of the column and its column number.
@@ -69,6 +69,29 @@ And inside `Num`, we calculate `sd` incrementally using `n`,`mu` and the
 second moment variable `m2` (via the Welform algorithn  [^welford]).
 
 ```julia <up add!>
+function add!(sym::Sym, x) sym.n+=1; sym.has[x]=1+get(sym.has,x,0) end 
+function add!(num::Num, x::Number) 
+  num.n += 1
+  d     = x - num.mu
+  num.mu += d / num.n
+  num.m2 += d * (x -  num.mu)
+  num.sd  =  num.n > 1 ? (num.m2 / (num.n - 1))^.5 : 0
+  num.lo = min(x, num.lo)
+  num.hi = max(x, num.hi) end
+
+# often
+often(num::Num) = num.mu
+often(sym::Sym) = findmax(sym.has)[2]
+
+"Column deviation from middle."
+
+spread(num::Num) = num.sd
+spread(sym::Sym) = - sum(n/sym.n*log2(n/sym.n) for (_,n) in sym.has if n>0) 
+
+"Normalization."
+
+norm(_, x)  = x 
+norm(num::Num, x::Number) = (x - num.lo) / (num.hi - num.lo + 1E-30)
 ```
 
 ```julia <up options>
