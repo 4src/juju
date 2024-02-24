@@ -48,7 +48,7 @@ function add!(num::Num, x::Number)
   num.lo = min(x, num.lo)
   num.hi = max(x, num.hi) end
 
-# often
+## often
 often(num::Num) = num.mu
 often(sym::Sym) = findmax(sym.has)[2]
 
