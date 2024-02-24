@@ -100,7 +100,16 @@ are kept in multiple lists:
   klass=nothing; all=[]; x=Dict(); y=Dict(); end
 ```
 
-```julia <up data1>
+```julia <up data!>
+DATA(x) = adds!(Data(),x)
+
+adds!(x, lst)           = begin [add!(x,y) for y in lst]; x end
+adds!(data::Data, file) = begin csv(file, r->add!(data,r)); data end
+
+function add!(data::Data, v::Vector) 
+  if data.cols === nothing data.cols=COLS(v) else  
+    [add!!(col,x) for (col,x) in zip(data.cols.all, v) if x != "?"]
+    push!(data.rows, v) end end
 ```
 ### `Data` comes from  csv files, or other `Data`
 
