@@ -32,10 +32,7 @@ function d2h(data::Data, v::Vector)
     n += 1 end 
   (d/n) ^ .5 end
 ```
-For that to work, when we read in a csv data file, we need to know
-(a) what are the $x$; (b) what are the $y$ values and  (c) what
-is heaven for each $y$.
-
+For that to work, when we read in a csv data file, we need to fill in some details e.g. (a) what are the $y$ values (used in `data.cols.y`) and (b) what is heaven for each $y$ goal (used in `col.heaven`)
 ```julia <up options>
 options="
 up.jl: smos
