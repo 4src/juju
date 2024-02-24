@@ -24,13 +24,11 @@ OPTIONS:
 @kwdef mutable struct Sym
   at=0; txt=""; n=0; has=Dict() end
 
-## cols
-@kwdef mutable struct Cols 
-  klass=nothing; all=[]; x=Dict(); y=Dict(); names=[] end
-
-"`Data` = storage for rows and cols."
-
+## data
 @kwdef mutable struct Data rows=[]; cols=nothing end
+
+@kwdef mutable struct Cols 
+  klass=nothing; all=[]; x=Dict(); y=Dict(); end
 
 ## col
 COL(s=" ",n=0) = (occursin(r"^[A-Z]", s) ? NUM : SYM)(s,n) 
@@ -71,7 +69,7 @@ function COLS(v::Vector)
       push!(occursin(s[end],"!+-") ? cols.y : cols.x, col) end end  
   cols end
 
-## data
+## data!
 DATA(x) = adds!(Data(),x)
 
 adds!(x, lst)           = begin [add!(x,y) for y in lst]; x end
@@ -83,7 +81,7 @@ function add!(data::Data, v::Vector)
     push!(data.rows, v) end end
 
 ## clone
-clone(data::Data, src=[]) = adds!(DATA([data.cols.names]),src) 
+clone(data::Data, src=[]) = adds!(DATA([col.txt for col in data.cols.all]),src) 
 
 ## d2h  
 function d2h(data::Data, v::Vector) 

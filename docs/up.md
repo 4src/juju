@@ -42,8 +42,13 @@ function d2h(data::Data, v::Vector)
 
 ## Data Model
 ### Columns are `Num`s or `Sym`s
-For the above `d2h`  code to  work, when we read in a csv data file, we need to fill in some  details  e.g. (a) what are the $y$ values (used in `data.cols.y`) and (b) what is heaven for each $y$ goal (used in `col.heaven`). To make that work, the column names (on line one
-of the csv file) have some special symbols:
+For the above `d2h`  code to  work, when we read in a csv data file, we need to fill in some  details  like: 
+
+- what are the $y$ values (used in `data.cols.y`) 
+- (b) what is heaven for each $y$ goal (used in `col.heaven`). 
+
+To make that work, the column names (on line one
+of the csv file) have some special syntax:
 
 - Any column name starting with an upper-case letter (like `Age`) is a `Num`eric;
 - Any column name ending with `+`,`-` is a $y$ goal to be maximized
@@ -55,7 +60,7 @@ COL(s=" ",n=0) = (occursin(r"^[A-Z]", s) ? NUM : SYM)(s,n)
 SYM(s=" ",n=0) = Sym(at=n, txt=s, has=Dict(_)) 
 NUM(s=" ",n=0) = Num(at=n, txt=s, heaven= s[end]=="-" ? 0 : 1)
 ```
-In the above `s`and `n` are the name of the column and its column number.
+In the above, `Sym` and `Num` are `s`and `n` are the name of the column and its column number.
 `Num`s and `Sym`s handle numeric and symbolic columns, respectively. 
 
 ```julia <up numsym>
@@ -67,7 +72,8 @@ In the above `s`and `n` are the name of the column and its column number.
 ```
 Inside `Sym`, `has` stores the frequency counts of symbols in a column.
 And inside `Num`, we calculate `sd` incrementally using `n`,`mu` and the
-second moment variable `m2` (via the Welford algorithn  [^welford]).
+second moment variable `m2`-- via the Welford algorithn  [^welford] (which
+computes `sd` without needing two passes).
 
 ```julia <up add!>
 function add!(sym::Sym, x) sym.n+=1; sym.has[x]=1+get(sym.has,x,0) end 
@@ -80,9 +86,22 @@ function add!(num::Num, x::Number)
   num.lo  = min(x, num.lo)
   num.hi  = max(x, num.hi) end
 ```
-
 ### `Data` stores columns and rows
+When we read in a csv, its rows get added to a `Data` type. As we do, the `Num` and `Sym` cols are incrementally updated.   These columns
+are kept in multiple lists:
 
+- `all` is all the columns;
+- `x`,`y` are the independent and dependent columns;
+
+```julia <up data>
+@kwdef mutable struct Data rows=[]; cols=nothing end
+
+@kwdef mutable struct Cols 
+  klass=nothing; all=[]; x=Dict(); y=Dict(); end
+```
+
+```julia <up data1>
+```
 ### `Data` comes from  csv files, or other `Data`
 
 ```julia <up options>
