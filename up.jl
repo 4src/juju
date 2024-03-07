@@ -16,8 +16,8 @@ OPTIONS:
   -p --p      distance coefficient     = 2
   -r --reuse  do npt reuse parent node = true
   -s --seed   random number seed       = 937162211"
-  
-## numsym
+
+#------------------------------------------------------------------------------
 @kwdef mutable struct Num
   at=0; txt=""; n=0; mu=0; m2=0; sd=0; lo=1E-30; hi= -1E-30; heaven=1 end
 
@@ -30,12 +30,11 @@ OPTIONS:
 @kwdef mutable struct Cols 
   klass=nothing; all=[]; x=Dict(); y=Dict(); end
 
-## col
+#------------------------------------------------------------------------------
 COL(s=" ",n=0) = (occursin(r"^[A-Z]", s) ? NUM : SYM)(s,n) 
-SYM(s=" ",n=0) = Sym(at=n, txt=s, has=Dict(_)) 
+SYM(s=" ",n=0) = Sym(at=n, txt=s, has=Dict()) 
 NUM(s=" ",n=0) = Num(at=n, txt=s, heaven= s[end]=="-" ? 0 : 1)
 
-## add!
 function add!(sym::Sym, x) sym.n+=1; sym.has[x]=1+get(sym.has,x,0) end 
 function add!(num::Num, x::Number) 
   num.n  += 1
@@ -46,21 +45,16 @@ function add!(num::Num, x::Number)
   num.lo  = min(x, num.lo)
   num.hi  = max(x, num.hi) end
 
-## often
 often(num::Num) = num.mu
 often(sym::Sym) = findmax(sym.has)[2]
-
-"Column deviation from middle."
 
 spread(num::Num) = num.sd
 spread(sym::Sym) = - sum(n/sym.n*log2(n/sym.n) for (_,n) in sym.has if n>0) 
 
-"Normalization."
-
 norm(_, x)  = x 
 norm(num::Num, x::Number) = (x - num.lo) / (num.hi - num.lo + 1E-30)
 
-## cols
+#------------------------------------------------------------------------------
 function COLS(v::Vector) 
   cols = Cols(names=v, all= [COL(s,n) for (n,s) in enumerate(v)])
   for (n,(s,col)) in enumerate(zip(v,cols.all))
@@ -68,8 +62,8 @@ function COLS(v::Vector)
       if s[end] == "!" klass=col end
       push!(occursin(s[end],"!+-") ? cols.y : cols.x, col) end end  
   cols end
-
-## data!
+ 
+#------------------------------------------------------------------------------
 DATA(x) = adds!(Data(),x)
 
 adds!(x, lst)           = begin [add!(x,y) for y in lst]; x end
@@ -80,10 +74,8 @@ function add!(data::Data, v::Vector)
     [add!!(col,x) for (col,x) in zip(data.cols.all, v) if x != "?"]
     push!(data.rows, v) end end
 
-## clone
 clone(data::Data, src=[]) = adds!(DATA([col.txt for col in data.cols.all]),src) 
 
-## d2h  
 function d2h(data::Data, v::Vector) 
   d,n  = 0,0
   for (n,col) in data.cols.y 
@@ -91,41 +83,18 @@ function d2h(data::Data, v::Vector)
     n += 1 end 
   (d/n) ^ .5 end
 
-## General Utilities
-
-"Coerce to integer."
-
+#------------------------------------------------------------------------------
 int(n::Number) = floor(Int,n)
-
-"Round to (say) 3 digits."
-
 rnd(x,n=3)     = round(x,sigdigits=n)
- 
 
-
-"Parse `options` to build `the` global settings."
-
-the=(;Dict(Symbol(k)=>what(v) 
-      for (k,v) in eachmatch(r"\n.*--(\S+)[^=]+= *(\S+)",options))...)  
-
-"Randomly sort a list."
-
-shuffle!(v::Vector) = sort(v, by= _ -> rani(1,100000))
-
-"Generate random numbers based on `rseed`."
-
-rseed=the.seed
-function rani(lo::Int, hi::Int) int(.5 + ranf(lo,hi)) end
-function ranf(lo=0.0, hi=1.0) 
-  global rseed = (16807 * rseed) % 214748347 
-  lo + (hi - lo) * rseed / 214748347 end
-
-## coerce
 function what(s) 
   for t in [Int32,Float64,Bool] 
     if ((x=tryparse(t,s)) !== nothing) return x end end 
   s end
   
+the=(;Dict(Symbol(k)=>what(v) 
+      for (k,v) in eachmatch(r"\n.*--(\S+)[^=]+= *(\S+)",options))...)  
+
 function csv(sfile, fun::Function) 
   src = open(sfile)
   while ! eof(src)
@@ -133,14 +102,8 @@ function csv(sfile, fun::Function)
     if sizeof(new) != 0
       fun(map(what,split(new,","))) end end end
 
-## cli 
-
 function cli(nt::NamedTuple) 
   (;cli(Dict(pairs(nt)))...) end
-
-"Update  the dictionary field `xx` from any
-CLI flaog `-x`. If the old field is a boolean,
-we do not need an argument (we just swith the old value."
 
 function cli(d::Dict) 
   for (k,v) in d 
@@ -151,13 +114,15 @@ function cli(d::Dict)
                v==false ? true  : what(ARGS[argv+1])) end end end 
   d end
 
-"Pretty print."
+shuffle!(v::Vector) = sort(v, by= _ -> rani(1,100000))
+
+rseed=the.seed
+function rani(lo::Int, hi::Int) int(.5 + ranf(lo,hi)) end
+function ranf(lo=0.0, hi=1.0) 
+  global rseed = (16807 * rseed) % 214748347 
+  lo + (hi - lo) * rseed / 214748347 end
 
 oo(i) = println(o(i)) 
-
-"Print with sorted fields, ignoring private fields
-(those starting with `_`."
-
 function o(i)  
   s,pre="$(typeof(i)){",""
   for f in sort!([x for x in fieldnames(typeof(i)) if !("$x"[1] == '_')])
@@ -165,17 +130,10 @@ function o(i)
     pre = ", " end
   s * "}" end 
 
-"# Unit Tests (and Demos)
-Store tests in `eg`:"
-
+#------------------------------------------------------------------------------
 eg=Dict()
 
-"Run some test whose label starts with `x`."
-
-go(x) = [run(s) for (s,_) in eg if x == split(s)[1]]  
-
-"Before running  a test, stash the config and reset the random number generator.
-After running them, ensure the config is reset to the stash."
+go(x) = [run(s) for (s,_) in eg if x == split(s)[1]]; nothing 
 
 function run(s,fun=eg[s]) 
   global the 
@@ -185,8 +143,6 @@ function run(s,fun=eg[s])
   the = deepcopy(b4)
   out end
 
-"Upate the global options from the command line. Maybe print the help or run the tests."
-
 function main() 
   global the
   the = cli(the)
@@ -195,9 +151,8 @@ function main()
     [println("  ./up.jl  $s") for s in sort([s for (s,_) in eg])]
   else        
     [go(arg) for arg in ARGS] end  end
-
-"### Demos"
-
+ 
+#------------------------------------------------------------------------------
 eg["boom   : handle a crash"] = function() false end
 
 eg["sets   : show the settings"] = function() println(the) end
@@ -217,13 +172,13 @@ eg["many   : print random items"] = function()
 
 eg["num    : print nums"] = function()
   v=[]
-  incs!(v, [normal(10,2) for _ in 1:1000])
+  adds!(v, [norm(10,2) for _ in 1:1000])
   sort!(v)
   9.8 < often(v) < 10.2 && 1.85 < spread(v) < 2.15 end
 
 eg["sym    : print syms"] = function()
   d = Dict() 
-  incs!(d, [c for c in "aaaabbc"])
+  adds!(d, [c for c in "aaaabbc"])
   return 'a'==often(d) && 1.37 < spread(d) < 1.38  end
 
 eg["data   : print data"] =  function()
@@ -242,6 +197,5 @@ eg["order  : print order"] = function()
    println("best     ", stats(clone(dt,rows[1:m+1])))
    println("rest     ", stats(clone(dt,rows[n-m:n]))) end
 
-"# Start-up"
-
+#-------------------------------------------------
 if (abspath(PROGRAM_FILE) == @__FILE__) main() end
