@@ -24,12 +24,10 @@ OPTIONS:
 @kwdef mutable struct Sym
   at=0; txt=""; n=0; has=Dict() end
 
-## data
 @kwdef mutable struct Data rows=[]; cols=nothing end
 
 @kwdef mutable struct Cols 
   klass=nothing; all=[]; x=Dict(); y=Dict(); end
-
 #------------------------------------------------------------------------------
 COL(s=" ",n=0) = (occursin(r"^[A-Z]", s) ? NUM : SYM)(s,n) 
 SYM(s=" ",n=0) = Sym(at=n, txt=s, has=Dict()) 
@@ -53,7 +51,6 @@ spread(sym::Sym) = - sum(n/sym.n*log2(n/sym.n) for (_,n) in sym.has if n>0)
 
 norm(_, x)  = x 
 norm(num::Num, x::Number) = (x - num.lo) / (num.hi - num.lo + 1E-30)
-
 #------------------------------------------------------------------------------
 function COLS(v::Vector) 
   cols = Cols(names=v, all= [COL(s,n) for (n,s) in enumerate(v)])
@@ -66,8 +63,8 @@ function COLS(v::Vector)
 #------------------------------------------------------------------------------
 DATA(x) = adds!(Data(),x)
 
-adds!(x, lst)           = begin [add!(x,y) for y in lst]; x end
-adds!(data::Data, file) = begin csv(file, r->add!(data,r)); data end
+adds!(x, lst)                  = begin [add!(x,y) for y in lst]; x end
+adds!(data::Data, file:String) = begin csv(file, r->add!(data,r)); data end
 
 function add!(data::Data, v::Vector) 
   if data.cols === nothing data.cols=COLS(v) else  
@@ -129,7 +126,6 @@ function o(i)
     s   = s * pre * "$f=$(getfield(i,f))"
     pre = ", " end
   s * "}" end 
-
 #------------------------------------------------------------------------------
 eg=Dict()
 
