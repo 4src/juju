@@ -63,8 +63,8 @@ function COLS(v::Vector)
 #------------------------------------------------------------------------------
 DATA(x) = adds!(Data(),x)
 
-adds!(x, lst)                  = begin [add!(x,y) for y in lst]; x end
-adds!(data::Data, file:String) = begin csv(file, r->add!(data,r)); data end
+adds!(x, lst)                   = begin [add!(x,y) for y in lst]; x end
+adds!(data::Data, file) = begin csv(file, r->add!(data,r)); data end
 
 function add!(data::Data, v::Vector) 
   if data.cols === nothing data.cols=COLS(v) else  
@@ -167,8 +167,7 @@ eg["many   : print random items"] = function()
   println(shuffle!([10,20,30,40,50,60,70,80,90])) end
 
 eg["num    : print nums"] = function()
-  v=[]
-  adds!(v, [norm(10,2) for _ in 1:1000])
+  n=adds!(NUM(), [norm(10,2) for _ in 1:1000])
   sort!(v)
   9.8 < often(v) < 10.2 && 1.85 < spread(v) < 2.15 end
 
@@ -192,6 +191,5 @@ eg["order  : print order"] = function()
    println("baseline ", stats(dt))
    println("best     ", stats(clone(dt,rows[1:m+1])))
    println("rest     ", stats(clone(dt,rows[n-m:n]))) end
-
 #-------------------------------------------------
 if (abspath(PROGRAM_FILE) == @__FILE__) main() end
