@@ -132,6 +132,7 @@ eg=Dict()
 go(x) = [run(s) for (s,_) in eg if x == split(s)[1]]; nothing 
 
 function run(s,fun=eg[s]) 
+  print(s)
   global the 
   b4 = deepcopy(the) 
   global rseed = the.seed
@@ -168,8 +169,8 @@ eg["many   : print random items"] = function()
 
 eg["num    : print nums"] = function()
   n=adds!(NUM(), [norm(10,2) for _ in 1:1000])
-  sort!(v)
-  9.8 < often(v) < 10.2 && 1.85 < spread(v) < 2.15 end
+  sort!(n)
+  9.8 < often(n) < 10.2 && 1.85 < spread(n) < 2.15 end
 
 eg["sym    : print syms"] = function()
   d = Dict() 
