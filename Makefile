@@ -39,6 +39,7 @@ docs/%.md: %.jl
 		-o "$@"
 
 ~/tmp/%.pdf   : %.jl  ## jl ==> pdf
+	echo 11
 	mkdir -p ~/tmp
 	echo "$@" 
 	a2ps                           \
