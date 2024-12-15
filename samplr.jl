@@ -279,3 +279,5 @@ eg("around  : print around", () -> begin
 
 #-------- --------- --------- --------- --------- --------- ----
 if (abspath(PROGRAM_FILE) == @__FILE__) runs() end
+
+print(100)

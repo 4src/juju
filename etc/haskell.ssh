@@ -1,0 +1,49 @@
+# Style sheet for Haskell
+style "Haskell" is
+  written by "Your Name"
+  version is "1.0"
+
+# Haskell reserved keywords
+keywords in Keyword are
+  "case", "class", "data", "default", "deriving", "do", "else", "if", "import",
+  "in", "infix", "infixl", "infixr", "instance", "let", "module", "newtype",
+  "of", "then", "type", "where", "qualified", "as", "foreign", "forall", "mdo", "family"
+end keywords
+
+# Built-in types and functions
+optional keywords in Builtin are
+  "Int", "Integer", "Float", "Double", "Char", "Bool", "Maybe", "Either",
+  "String", "IO", "Show", "Read", "Eq", "Ord", "Enum", "Bounded",
+  "Monad", "Functor", "Applicative", "Foldable", "Traversable",
+  "id", "const", "flip", "not", "succ", "pred", "fst", "snd", "map", "filter",
+  "concat", "foldl", "foldr", "length", "reverse", "take", "drop", "zip",
+  "unzip", "putStr", "putStrLn", "print", "read", "readLn", "show"
+end keywords
+
+# Operators and symbols
+optional keywords in Operator are
+  "->", "<-", "=>", "=", "::", "\\", ".", "..", "<>", "<", ">", "<=", ">=",
+  "==", "/=", "+", "-", "*", "/", "++", "!!", "$", "&&", "||", ">>", ">>=", 
+  "<*>", "<$>", "<|>", "<*>", "*>", "<*"
+end keywords
+
+# Comment syntax
+sequences are
+  "Comment" is "--" "\n"
+  "MultilineComment" is "{-" "-}"
+end sequences
+
+# String and character delimiters
+sequences are
+  "String" is "\"" "\"" and "\\" "\\"
+  "Char" is "'" "'" and "\\" "\\"
+end sequences
+
+# Special Haskell literals (e.g., numbers and constructors)
+special sequences are
+  "Constructor" is "[A-Z][a-zA-Z0-9_]*"
+  "Number" is "[0-9]+(\.[0-9]+)?"
+end sequences
+
+end style
+

@@ -14,32 +14,27 @@ saved         : ## save and push to main branch
 FILES=$(wildcard *.jl)
 docs: 
 	$(MAKE) -B $(addprefix docs/, $(FILES:.jl=.md))
- 
 
 BODY='BEGIN {RS=""; FS="\n"} NR==1 { next } { print($$0 "\n")  }'
 HEAD='BEGIN {RS=""; FS="\n"} NR==1 { print($$0 "\n"); exit }'
 
-docs/%.md: %.jl
-	echo "# filling in $@ ..."
-	gawk --source $(HEAD) README.md >  _in
-	gawk --source $(BODY) $@                  >> _in
-	gawk -f etc/snips.awk PASS=1 $^  PASS=2 _in > _out
-	mv _out $@; rm _in
+~/tmp/*.html: %.jl
+	pycco -d $(dir $@) -l haskell $^
+	echo 'p { text-align: right }' > $(dir $@)/pycco.css
 
-~/tmp/%.pdf : docs/%.md
-	echo "# $^ ==> $@"
-	pandoc "$^" \
-	    -f gfm \
-			--toc \
-		-V toc-title:"$^" \
-  	  -V geometry:margin=2cm \
-		-V fontsize=10pt \
-		-V 'fontfamily:dejavu' \
-		--highlight-style tango \
-		-o "$@"
+# ~/tmp/%.pdf : docs/%.md
+# 	echo "# $^ ==> $@"
+# 	pandoc "$^" \
+# 	    -f gfm \
+# 			--toc \
+# 		-V toc-title:"$^" \
+#   	  -V geometry:margin=2cm \
+# 		-V fontsize=10pt \
+# 		-V 'fontfamily:dejavu' \
+# 		--highlight-style tango \
+# 		-o "$@"
 
 ~/tmp/%.pdf   : %.jl  ## jl ==> pdf
-	echo 11
 	mkdir -p ~/tmp
 	echo "$@" 
 	a2ps                           \
@@ -48,6 +43,7 @@ docs/%.md: %.jl
 		--file-align=fill               \
 		--line-numbers=1                 \
 		--borders=no                      \
+		--pretty-print="etc/jl.ssh"       \
 		--pro=color                        \
 		--columns  3                        \
 		-M letter                            \
