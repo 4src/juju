@@ -9,7 +9,9 @@ help          :  ## show help
 
 saved         : ## save and push to main branch 
 	read -p "commit msg> " x; y=$${x:-saved}; git commit -am "$$y}"; git push;  git status; echo "$$y, saved!"
- 
+
+sh:
+	bash --init-file etc/dotshellrc -i
 
 FILES=$(wildcard *.jl)
 docs: 

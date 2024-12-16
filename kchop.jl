@@ -24,13 +24,17 @@ it=(;Dict(Symbol(k)=>what(v)
 Big=1E32
 
 @kwdef mutable struct Num   
-   lo= 1E32; hi= -1E32; utopia = 1 end
+  at=0; txt=""; n=0; mu=0; sd=0; md=20; lo=Big; hi= -Big; utopia = 1 end
    
-function NUM(s) 
-  print(1000,s[end])
-  print(s[end]=='-')
-  Num(utopia = (s[end] == '-' ? 0 : 1);) end
+function NUM(s::String) 
+  Num(utopia = (s[end] == '-' ? 0 : 1)) end
 
-print(NUM("asdas-"))
+function rows(v::Vector, fun::Function) 
+  [fun(x) for x in v] end
 
-println(200)
+function rows(file::String, fun::Function) 
+  src = open(file)
+  while ! eof(src)
+    new = replace(readline(src), r"([ \t\n]|#.*)"=>"")
+    if sizeof(new) != 0
+      fun(map(what,split(new,","))) end end end
