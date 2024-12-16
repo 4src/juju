@@ -24,9 +24,12 @@ it=(;Dict(Symbol(k)=>what(v)
 Big=1E32
 
 @kwdef mutable struct Num   
-  at=0; txt=""; n=0; mu=0; sd=0; md=20; lo=Big; hi= -Big; utopia = 1 end
+  at=0; txt=""; n=0; mu=0; sd=0; md=20; lo=Big; hi= -Big; utopia=1 end
+
+@kwdef mutable struct Sym   
+  at=0; txt=""; n=0; all=[]; mode=nothing; most=0 end
    
-function NUM(s::String) 
+function NUM(s::String,at:Integer) 
   Num(utopia = (s[end] == '-' ? 0 : 1)) end
 
 function rows(v::Vector, fun::Function) 
