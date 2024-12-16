@@ -32,10 +32,10 @@ Big=1E32
 function NUM(s::String) 
   Num(utopia = (s[end] == '-' ? 0 : 1)) end
 
-function rows(v::Vector, fun::Function)::Vector
-  [fun(x) for x in v] end
+rows(v::Vector,    fun::Function) = [fun(x) for x in v] 
+rows(file::String, fun::Function) = reads(file,fun)
 
-function rows(file::String, fun::Function)::nothing
+function reads(file::String, fun::Function)
   src = open(file)
   while ! eof(src)
     new = replace(readline(src), r"([ \t\n]|#.*)"=>"")
@@ -43,7 +43,7 @@ function rows(file::String, fun::Function)::nothing
       fun(map(what,split(new,","))) end end end
 
 function oo(obj,pre="")
-    println("\n$(typeof(obj)) {")
+    println("$(typeof(obj)) {")
     [println("  $f = $(getfield(obj, f))") for f in fieldnames(typeof(obj))]
     println("}")
 end
