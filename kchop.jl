@@ -29,15 +29,23 @@ Big=1E32
 @kwdef mutable struct Sym   
   at=0; txt=""; n=0; all=[]; mode=nothing; most=0 end
    
-function NUM(s::String,at:Integer) 
+function NUM(s::String) 
   Num(utopia = (s[end] == '-' ? 0 : 1)) end
 
-function rows(v::Vector, fun::Function) 
+function rows(v::Vector, fun::Function)::Vector
   [fun(x) for x in v] end
 
-function rows(file::String, fun::Function) 
+function rows(file::String, fun::Function)::nothing
   src = open(file)
   while ! eof(src)
     new = replace(readline(src), r"([ \t\n]|#.*)"=>"")
     if sizeof(new) != 0
       fun(map(what,split(new,","))) end end end
+
+function oo(obj,pre="")
+    println("\n$(typeof(obj)) {")
+    [println("  $f = $(getfield(obj, f))") for f in fieldnames(typeof(obj))]
+    println("}")
+end
+
+oo(NUM("aadas-"))

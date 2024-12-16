@@ -3,6 +3,21 @@ src="https://img.shields.io/badge/julia-1.10.1-yellow"> <img
 src="https://img.shields.io/badge/purpose-se--ai-blueviolet"> <img
 src="https://img.shields.io/badge/platform-osx,linux-pink">
 
+<img src="https://img.shields.io/badge/tests-passing-green"> <img
+src="https://img.shields.io/badge/julia-1.10.1-yellow"> <img
+src="https://img.shields.io/badge/purpose-se--ai-blueviolet"> <img
+src="https://img.shields.io/badge/platform-osx,linux-pink">
+
+<img src="https://img.shields.io/badge/tests-passing-green"> <img
+src="https://img.shields.io/badge/julia-1.10.1-yellow"> <img
+src="https://img.shields.io/badge/purpose-se--ai-blueviolet"> <img
+src="https://img.shields.io/badge/platform-osx,linux-pink">
+
+<img src="https://img.shields.io/badge/tests-passing-green"> <img
+src="https://img.shields.io/badge/julia-1.10.1-yellow"> <img
+src="https://img.shields.io/badge/purpose-se--ai-blueviolet"> <img
+src="https://img.shields.io/badge/platform-osx,linux-pink">
+
 # Up.jl : simple incremental sequential optimization
 
 Life is short and there is too much to see.
@@ -153,7 +168,7 @@ function add!(data::Data, v::Vector)
     [add!(col,x) for (col,x) in zip(data.cols.all, v) if x != "?"]
     push!(data.rows, v) end end
 
-clone(data::Data, src=[]) = adds!(DATA([col.txt for col in data.cols.all]),src) 
+clone(data::Data, src=[]) = adds!(DATA(data.cols.names),src) 
 
 function d2h(data::Data, v::Vector) 
   d = sum((col.heaven - norm(col, v[col.at])) ^ 2  for col in data.cols.y)
@@ -212,7 +227,7 @@ function o(i)
 #------------------------------------------------------------------------------
 eg=Dict()
 
-go(x) = [run(s) for (s,_) in eg if x == split(s)[1]]; nothing 
+go(x) = [run(s) for (s,_) in eg if x == split(s,":")[1]]; nothing 
 
 function run(s,fun=eg[s]) 
   print(s)
@@ -228,50 +243,56 @@ function main()
   the = cli(the)
   if the.help 
     println(options,"\n\n","ACTIONS:") 
-    [println("  ./up.jl  $s") for s in sort([s for (s,_) in eg])]
+    for s in sort([s for (s,_) in eg])
+      a = split(s,":")
+      @printf "  ./up.jl  %-8s  # %s\n" a[1] a[2] end
   else        
     [go(arg) for arg in ARGS] end  end
  
 #------------------------------------------------------------------------------
-eg["boom   : handle a crash"] = function() false end
+eg["boom: handle a crash"] = function() false end
 
-eg["sets   : show the settings"] = function() println(the) end
+eg["sets: show the settings"] = function() println(the) end
 
-eg["csv    : print rows in csv file"] = function() 
+eg["csv: print rows in csv file"] = function() 
   n = 0
   csv(the.file, (r) -> n += length(r)) 
   n == 3192 end
 
-eg["rand   : print random ints"] = function()
+eg["rand: print random ints"] = function()
   global rseed=1; i1 = rani(1,10); f1=rnd(ranf(1,10),2)
          rseed=1; i2 = rani(1,10); f2=rnd(ranf(1,10),2) 
          i1==i2 && f1==f2 end
 
-eg["many   : print random items"] = function()   
+eg["many: print random items"] = function()   
   println(shuffle!([10,20,30,40,50,60,70,80,90])) end
 
-eg["num    : print nums"] = function()
+eg["num: print nums"] = function()
   n=adds!(NUM(), [norm(10,2) for _ in 1:1000])
   sort!(n)
   9.8 < often(n) < 10.2 && 1.85 < spread(n) < 2.15 end
 
-eg["sym    : print syms"] = function()
+eg["sym: print syms"] = function()
   d = adds!(SYM(), [c for c in "aaaabbc"])
   return 'a'==often(d) && 1.37 < spread(d) < 1.38  end
 
-eg["data   : print data"] =  function()
+eg["data: print data"] =  function()
   print(stats(DATA(the.file))) end
 
-eg["d2h    : calculate distance to heaven"] = function()
+eg["clone: print data"] =  function()
+  dt = DATA(the.file)  
+  print(clone(dt,dt.rows[1:50])) end
+
+eg["d2h: calculate distance to heaven"] = function()
   dt = DATA(the.file) 
   print(d2h(dt,dt.rows[1])) end
 
-eg["order  : print order"] = function()
+eg["order: print order"] = function()
    dt    = DATA(the.file)  
    rows=sort(dt.rows, by=row -> d2h(dt,row)) 
    n    = length(rows)
    m    = int(n ^ .5)
-   println("baseline ", stats(dt))
+   return println("baseline ", stats(dt))
 
    return println(100,":",length(rows),":",clone(dt,rows[1:m+1]))
    println("best     ", stats(clone(dt,rows[1:m+1])))
@@ -309,4 +330,8 @@ This  code uses  two conventions:
 [^google]: Golovin, D., Solnik, B., Moitra, S., Kochanski, G., Karro, J., & Sculley, D. (2017, August). Google vizier: A service for black-box optimization. In Proceedings of the 23rd ACM SIGKDD international conference on knowledge discovery and data mining (pp. 1487-1495).
 
 [^welford]: https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Welford's_online_algorithm
+
+:::
+
+:::
 
