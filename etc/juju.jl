@@ -86,7 +86,7 @@ holds1(i::DATA, on)         = [row(i,x) for x in on]
 
 _id=0
 function row(i::DATA, a)  
-  if  i.cols==nothing 
+  if  isnothing(i.cols)
     i.cols=COLS(a) 
   else
     global _id = _id + 1

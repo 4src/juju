@@ -12,7 +12,9 @@ OPTIONS:
   -s int   #samples searched for each new centroid = 32"
 
 #------------------------------------------------------------------------------
-Big,Str,Fun = 1E32,AbstractString,Function
+Str,Fun = AbstractString,Function
+Atom    = Union{Symbol,Number,Char,Bool,Str}
+Big     = 1E32
 
 @kwdef mutable struct Num   
   col=0; txt=""; utopia=1; n=0; mu=0; sd=0; md=20; lo= Big; hi= -Big end
@@ -26,47 +28,45 @@ Big,Str,Fun = 1E32,AbstractString,Function
 @kwdef mutable struct Data
   rows=[]; cols=nothing end
 
-adds(i::Data, v::Vector) = [(r) -> add(i,row) for row in v] 
-adds(i::Data, file::Str) = reads(file, (row) -> add(i,row))
+#-------------------------------------------------------------------------------
+adds(i::Data, v::Vector) = [add(i,row) for row in v] 
+adds(i::Data, file::Str) = reads(open(file), (row) -> add(i,row)) 
 
-add(i::Cols, row::Vector) = [add(col, row[col.col]) for col in i.all] 
-add(i::Data, row::Vector) =
-  isnothing(i.cols) ? i.cols = COLS(row) : push!(i.rows, add(i.cols,row)) 
+add(i::Cols, row::Vector)::Vector = [add(j, row[j.col]) for j in i.all] 
+add(i::Data, row::Vector) = isnothing(i.cols) ? i.cols = COLS(row) : push!(i.rows, add(i.cols,row)) 
 
-function add(i::Num, x)
-  if not isnan(x)
+function add(i, x::Atom)::Atom
+  if x != "?"
     i.n  += 1
-    d     = value - i.mu
-    i.mu += d / i.n
-    i.sd += d * (value - i.mu)
-    i.lo  = min(i.lo, value)
-    i.hi  = max(i.hi, value) end
+    _add(i,x)
   x end
 
-function add(i::Sym, x)
-  if not isnan(x)
-    i.n  += 1
-    tmp = i.has[x] = 1 + get(i.has, x, 0)
-    if tmp>i.most 
-      i.most,i.mode=tmp,x end end
-  x end
+function _add(i::Num, x::Atom)
+  d     = value - i.mu
+  i.mu += d / i.n
+  i.sd += d * (value - i.mu)
+  i.lo  = min(i.lo, value)
+  i.hi  = max(i.hi, value) end
 
-function reads(file::Str, fun::Fun)
-  src = open(file)
+function _add(i::Sym, x::Atom) 
+  tmp = i.has[x] = 1 + get(i.has, x, 0)
+  if tmp>i.most 
+    i.most,i.mode=tmp,x end end 
+
+#-------------------------------------------------------------------------------
+reads(src::IoStream, fun::Fun) =
   while ! eof(src)
     new = replace(readline(src), r"([ \t\n]|#.*)"=>"")
     if sizeof(new) != 0
-      fun(map(what,split(new, ","))) end end end
+      fun(map(coerce,split(new, ","))) end end
 
-oo(x)            = println(o(x))
-o(i::Str)        = i 
-o(i::Char)       = string(i) 
-o(i::Number)     = string(i) 
+oo(x)            = println(o(x)) 
+
+o(i::Atom)       = string(i)  
 o(i::Array)      = "["*join(map(o,i),", ")*"]" 
-o(i::NamedTuple) = "("*join(map(o,i),", ")*")" 
-o(i::Dict)       = "{"*join([":$k "*o(v) for (k,v) in i]," ")*"}" 
-o(i::Any) = "$(typeof(i)){" * join(
-            [":$f $( o( get(i,f,"")))" for f in fieldnames(typeof(i))]," ")*"}"
+o(i::NamedTuple) = "(" * join([":$f $(o( getfield(i,f)))" for f in keys(i)]," ")*")"
+o(i::Any)        = "$(typeof(i)){" * join([
+                   ":$f $( o( getfield(i,f)))" for f in fieldnames(typeof(i))]," ")*"}" 
 
 cli(nt::NamedTuple) = (;cli(Dict(pairs(nt)))...)
 cli(d::Dict) = begin
@@ -82,11 +82,12 @@ function coerce(s)
     x = tryparse(t,s) 
     if ! isnothing(x) return x end end 
   s end
-
-@kwdef mutable struct Sym   
-  txt=""; fun end
-  
+ 
 the = (;Dict(Symbol(k) => coerce(v) 
        for (k,v) in eachmatch(r" -(\S+)[^=]+= *(\S+)",about))...) 
+
 #-------------------------------------------------------------------------------
-print(o(Num(txt="fred-")))
+oo(Num(txt="fred-",mu=0.333333))
+oo([1,2,3,4])
+oo(1)
+oo(:a)
