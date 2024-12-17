@@ -64,7 +64,6 @@ cols!(dt::Data, cells::Vector) = begin
   [inc!(col,x) for (col,x) in zip(dt.cl.all, cells) if x != "?"]
   cells end
 
- 
 #-------- --------- --------- --------- --------- --------- ----
 ROW(dt::Data,v::Vector) = Row(cells=v, bins=deepcopy(v))
 

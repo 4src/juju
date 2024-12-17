@@ -1,5 +1,4 @@
-me() = include("kchop.jl")
-this="
+about="
 kseed.lua : multi-objective optimization via kmeans++ initialization.
 (c) 2024 Tim Menzies <timm@ieee.org>, MIT license.
 
@@ -12,43 +11,82 @@ OPTIONS:
   -r int   random number seed      = 1234567891
   -s int   #samples searched for each new centroid = 32"
 
-function as(s)
-  for t in [Int32,Float64,Bool] 
-    if ((x=tryparse(t,s)) != nothing) return x end end 
-  s end
-
-it=(;Dict(Symbol(k) => as(v) for (k,v) in eachmatch(r" -(\S+)[^=]+= *(\S+)",this))...) 
-
 #------------------------------------------------------------------------------
-Big,Str,Fun = 1E32,String,Function
+Big,Str,Fun = 1E32,AbstractString,Function
 
 @kwdef mutable struct Num   
-  at=0; txt=""; utopia=1; n=0; mu=0; sd=0; md=20; lo= Big; hi= -Big end
+  col=0; txt=""; utopia=1; n=0; mu=0; sd=0; md=20; lo= Big; hi= -Big end
 
 @kwdef mutable struct Sym   
-  at=0; txt=""; n=0; all=[]; mode=nothing; most=0 end
-   
-NUM(s::Str) = Num(utopia = (s[end] == '-' ? 0 : 1))  
+  col=0; txt=""; n=0; all=[]; mode=nothing; most=0 end
 
-rows(v::Vector, fun::Fun) = [fun(x) for x in v] 
-rows(file::Str, fun::Fun) = reads(file,fun)
+@kwdef mutable struct Cols
+  all=[]; x=[]; y=[]; w=nothing end
+
+@kwdef mutable struct Data
+  rows=[]; cols=nothing end
+
+adds(i::Data, v::Vector) = [(r) -> add(i,row) for row in v] 
+adds(i::Data, file::Str) = reads(file, (row) -> add(i,row))
+
+add(i::Cols, row::Vector) = [add(col, row[col.col]) for col in i.all] 
+add(i::Data, row::Vector) =
+  isnothing(i.cols) ? i.cols = COLS(row) : push!(i.rows, add(i.cols,row)) 
+
+function add(i::Num, x)
+  if not isnan(x)
+    i.n  += 1
+    d     = value - i.mu
+    i.mu += d / i.n
+    i.sd += d * (value - i.mu)
+    i.lo  = min(i.lo, value)
+    i.hi  = max(i.hi, value) end
+  x end
+
+function add(i::Sym, x)
+  if not isnan(x)
+    i.n  += 1
+    tmp = i.has[x] = 1 + get(i.has, x, 0)
+    if tmp>i.most 
+      i.most,i.mode=tmp,x end end
+  x end
 
 function reads(file::Str, fun::Fun)
   src = open(file)
   while ! eof(src)
     new = replace(readline(src), r"([ \t\n]|#.*)"=>"")
     if sizeof(new) != 0
-      fun(map(what,split(new,","))) end end end
+      fun(map(what,split(new, ","))) end end end
 
-oo(x,pre="") = begin println(o(x,pre)); x end
+oo(x)            = println(o(x))
+o(i::Str)        = i 
+o(i::Char)       = string(i) 
+o(i::Number)     = string(i) 
+o(i::Array)      = "["*join(map(o,i),", ")*"]" 
+o(i::NamedTuple) = "("*join(map(o,i),", ")*")" 
+o(i::Dict)       = "{"*join([":$k "*o(v) for (k,v) in i]," ")*"}" 
+o(i::Any) = "$(typeof(i)){" * join(
+            [":$f $( o( get(i,f,"")))" for f in fieldnames(typeof(i))]," ")*"}"
 
-function o(obj, pre="")
-  s= "$pre $(typeof(obj)) {"
-  [ s *= ":$f $(getfield(obj, f)) " for f in fieldnames(typeof(obj))]
-  s*"}" end 
+cli(nt::NamedTuple) = (;cli(Dict(pairs(nt)))...)
+cli(d::Dict) = begin
+  for (k,v) in d 
+    s=String(k) 
+    for (argv,flag) in enumerate(ARGS) 
+      if flag in ["-"*s[1],  "--"*s]
+        d[k]= v==true ? false : (v==false ? true : coerce(ARGS[argv+1])) end end end
+  d end
 
-o(obj::Vector,pre="") =  "$pre[" * join(obj,", ") * "]"
+function coerce(s)
+  for t in [Int32,Float64,Bool] 
+    x = tryparse(t,s) 
+    if ! isnothing(x) return x end end 
+  s end
 
-oo([1,2 ,3])
+@kwdef mutable struct Sym   
+  txt=""; fun end
+  
+the = (;Dict(Symbol(k) => coerce(v) 
+       for (k,v) in eachmatch(r" -(\S+)[^=]+= *(\S+)",about))...) 
 #-------------------------------------------------------------------------------
-print(o(Num(txt="aadas-"))) 
+print(o(Num(txt="fred-")))
