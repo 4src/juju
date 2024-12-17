@@ -20,9 +20,9 @@ docs:
 BODY='BEGIN {RS=""; FS="\n"} NR==1 { next } { print($$0 "\n")  }'
 HEAD='BEGIN {RS=""; FS="\n"} NR==1 { print($$0 "\n"); exit }'
 
-~/tmp/*.html: %.jl
+~/tmp/%.html: %.jl
 	pycco -d $(dir $@) -l haskell $^
-	echo 'p { text-align: right }' > $(dir $@)/pycco.css
+	echo 'p { text-align: right }' >> $(dir $@)/pycco.css
 
 # ~/tmp/%.pdf : docs/%.md
 # 	echo "# $^ ==> $@"
