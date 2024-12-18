@@ -1,5 +1,4 @@
 module kseed
-
 about="
 kseed.lua : multi-objective optimization via kmeans++ initialization.
 (c) 2024 Tim Menzies <timm@ieee.org>, MIT license.
@@ -19,16 +18,18 @@ Atom    = Union{Symbol,Number,Char,Bool,Str}
 Big     = 1E32
 
 @kwdef mutable struct Data rows=[]; cols=nothing end
-@kwdef mutable struct Cols all=[]; x=[]; y=[]; w=nothing end
+@kwdef mutable struct Cols all=[]; x=[]; y=[]; names=[] end
 @kwdef mutable struct Sym  pos=0; txt=""; n=0; all=[]; mode=nothing; most=0 end
-@kwdef mutable struct Num  pos=0; txt=""; n=0; goal=1; mu=0; sd=0; md=20; lo=Big; hi=-Big end
+@kwdef mutable struct Num  
+  pos=0; txt=""; n=0; goal=1; mu=0; sd=0; md=20; lo=Big; hi=-Big end
 
 #-------------------------------------------------------------------------------
 adds(i::Data, v::Vector) = [add(i,row) for row in v] 
 adds(i::Data, file::Str) = csv(open(file), (row) -> add(i,row)) 
 
 add(i::Cols, row::Vector)::Vector = [add(j, row[j.pos]) for j in i.all] 
-add(i::Data, row::Vector) = isnothing(i.cols) ? i.cols = COLS(row) : push!(i.rows, add(i.cols,row)) 
+add(i::Data, row::Vector) = 
+  isnothing(i.cols) ? i.cols = COLS(row) : push!(i.rows, add(i.cols,row)) 
 
 function add(i, x::Atom)::Atom
   if x != "?" 
@@ -49,18 +50,20 @@ function _add(i::Sym, x::Atom)
     i.most,i.mode=tmp,x end end 
 
 #-------------------------------------------------------------------------------
-csv(src::IOStream, fun::Fun) = while ! eof(src)
-                                 new = replace(readline(src), r"([ \t\n]|#.*)"=>"")
-                                 if sizeof(new) != 0
-                                   fun(map(coerce,split(new, ","))) end end
+csv(src::IOStream, fun::Fun) = 
+  while ! eof(src)
+    new = replace(readline(src), r"([ \t\n]|#.*)"=>"")
+    if sizeof(new) != 0
+      fun(map(coerce,split(new, ","))) end end
 
 oo(x)            = println(o(x)) 
 
 o(i::Atom)       = string(i)  
-o(i::Array)      = "[" * join(map(o,i),", ") * "]" 
-o(i::NamedTuple) = "(" * join(sort!([":$f $(o( getfield(i,f)))" for f in keys((i))])," ") * ")"
-o(i::Any)        = "$(typeof(i)){" * join([
-                     ":$f $( o( getfield(i,f)))" for f in fieldnames(typeof(i))]," ") * "}" 
+o(i::Array)      = "[" * join(map(o,i),", ")*"]" 
+o(i::NamedTuple) = "(" * join(sort!(
+                    [":$f $(o( getfield(i,f)))" for f in keys((i))])," ")*")"
+o(i::Any) = "$(typeof(i)){" * join([
+            ":$f $(o(getfield(i,f)))" for f in fieldnames(typeof(i))]," ")*"}" 
 
 cli(nt::NamedTuple) = (;cli(Dict(pairs(nt)))...)
 cli(d::Dict) = begin
@@ -68,7 +71,8 @@ cli(d::Dict) = begin
     s=String(k) 
     for (argv,flag) in enumerate(ARGS) 
       if flag in ["-"*s[1],  "--"*s]
-        d[k]= v==true ? false : (v==false ? true : coerce(ARGS[argv+1])) end end end
+        d[k]= v==true ? false : (
+              v==false ? true : coerce(ARGS[argv+1])) end end end
   d end
 
 function coerce(s)
