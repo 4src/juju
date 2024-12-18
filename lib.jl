@@ -10,8 +10,8 @@ csv(src::IOStream, fun::Fun) =
 
 oo(x)            = println(o(x)) 
 
-o(i::Atom)       = string(i)  
-o(i::Array)      = "[" * join(map(o,i),", ")*"]" 
+o(i::Atom) = string(i)  
+o(i::Array) = "[" * join(map(o,i),", ")*"]" 
 o(i::NamedTuple) = 
   "(" * join(sort!([":$f $(o( getfield(i,f)))" for f in keys((i))])," ") * ")"
 o(i::Any) = 

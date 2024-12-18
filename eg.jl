@@ -2,6 +2,14 @@ include("kpp.jl")
 
 go=Dict()
 
+go["csv"] = () ->
+  csv(open("data/auto93.csv"), oo)
+
+go["cols"] = () -> 
+  [println(x) for x in
+    COLS(["Clndrs", "Vol", "HpX", "Lbs-", 
+          "Acc+", "Model", "origin", "Mpg+"])]
+
 go["boom"] = () -> false 
 
 go["o"] = () -> begin
