@@ -28,8 +28,8 @@ Col = Union{Sym,Num}
 adds(i::Col,  v::Vector) = [add(i,row) for row in v] 
 adds(i::Data, file::Str) = csv(open(file), (row) -> add(i,row)) 
 
-adds(v::Vector; i) = begin 
-  if isnothing(i) i = isnumber(first(v)) ? Num() : Sym() end
+adds(v::Vector; i=nothing) = begin 
+  if isnothing(i) i=(first(v) isa Number ? Num : Sym)() end
   [add(i,x) for x in v]
   i end
 
@@ -62,7 +62,8 @@ function add(i::Col, x::Atom)::Atom
 function _add(i::Num, x::Atom)
   d     = x - i.mu
   i.mu += d / i.n        # mu' = mu + (x-mu)/n
-  i.sd += d * (x - i.mu) # sd' = sd + (x-mu)(x-mu')
+  i.m2 += d * (x - i.mu) # sd' = sd + (x-mu)(x-mu')
+  i.sd  = i.n < 2 ? 0 : (i.m2/(i.n - 1))^0.5
   i.lo  = min(i.lo, x)
   i.hi  = max(i.hi, x) end
 

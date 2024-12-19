@@ -2,9 +2,13 @@ include("kpp.jl")
 
 go=Dict()
 
-go["--num"] = () -> begin
-  n = Num()
-  print(2) end
+go["--nums"] = () -> 
+  for r in [20,40,80,160,320,640,1280]
+    num=adds([normal(20,1) for _ in 1:r]) 
+    println((r, [round(x, digits=3) for x in [num.mu, num.sd]])) end 
+
+go["--syms"] = () ->
+  sym = adds(split("aaaabbc"), i=Sym())
 
 go["--csv"] = () -> 
   csv(open("data/auto93.csv"), oo)
