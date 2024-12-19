@@ -49,8 +49,9 @@ COLS(i::Cols, names::Vector) = begin
 
 #-------------------------------------------------------------------------------
 add(i::Cols, row::Vector)::Vector = [add(j, row[j.pos]) for j in i.all] 
-add(i::Data, row::Vector) = 
-  isnothing(i.cols) ? i.cols=COLS(Cols(),row) : push!(i.rows, add(i.cols,row)) 
+add(i::Data, row::Vector) = begin
+  print(i.cols)
+  isnothing(i.cols) ? i.cols=COLS(Cols(),row) : push!(i.rows, add(i.cols,row))  end
 
 function add(i::Col, x::Atom)::Atom
   if x != "?" 

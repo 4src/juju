@@ -15,7 +15,7 @@ go["--cols"] = () ->
      oo(x) end
 
 go["--data"] = () -> 
-  print(make(Data(),the.data))
+  print(adds(Data(),the.data))
 
 go["--boom"] = () -> false 
 
