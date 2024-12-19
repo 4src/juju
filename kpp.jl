@@ -29,13 +29,12 @@ adds(i::Col,  v::Vector) = [add(i,row) for row in v]
 adds(i::Data, file::Str) = csv(open(file), (row) -> add(i,row)) 
 
 adds(v::Vector; i) = begin 
-  if isnothing(i)
-    i = isnumber(first(v)) ? Num() : Sym() end
+  if isnothing(i) i = isnumber(first(v)) ? Num() : Sym() end
   [add(i,x) for x in v]
   i end
 
 #-------------------------------------------------------------------------------
-make(i::Cols, names::Vector) = begin
+COLS(i::Cols, names::Vector) = begin
   i.names = names
   for (n,s) in enumerate(names)
     col = if isuppercase(first(s)) 
@@ -51,7 +50,7 @@ make(i::Cols, names::Vector) = begin
 #-------------------------------------------------------------------------------
 add(i::Cols, row::Vector)::Vector = [add(j, row[j.pos]) for j in i.all] 
 add(i::Data, row::Vector) = 
-  isnothing(i.cols) ? i.cols=make(Cols(),row) : push!(i.rows, add(i.cols,row)) 
+  isnothing(i.cols) ? i.cols=COLS(Cols(),row) : push!(i.rows, add(i.cols,row)) 
 
 function add(i::Col, x::Atom)::Atom
   if x != "?" 
