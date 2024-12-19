@@ -6,9 +6,12 @@ go["csv"] = () ->
   csv(open("data/auto93.csv"), oo)
 
 go["cols"] = () -> 
+  for (n,x) in enumerate(["Clndrs", "Vol", "HpX", "Lbs-", 
+  "Acc+", "Model", "origin", "Mpg+"])
+     print(n,x) end
   [println(x) for x in
     COLS(["Clndrs", "Vol", "HpX", "Lbs-", 
-          "Acc+", "Model", "origin", "Mpg+"])]
+          "Acc+", "Model", "origin", "Mpg+"]).all]
 
 go["boom"] = () -> false 
 

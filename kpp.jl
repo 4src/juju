@@ -23,11 +23,15 @@ OPTIONS:
   pos=0; txt=""; n=0; goal=1; mu=0; sd=0; md=20; lo=Big; hi=-Big end
 
 NUM(s::Str, pos::Int) = Num(pos=pos, txt=s, goal= s[end]=="-" ? 0 : 1)
-COL(s::Str, pos::Int) = (occursin(r"^[A-Z]", s) ? NUM : Sym)(pos=pos,txt=s)
+COL(s::Str, pos::Int) = (occursin(r"^[A-Z]", s) ? NUM : Sym)(s,pos])
 
-COLS(v::Vector) = begin
-  i = Cols(names=v)
-  for (n,(s,col)) in enumerate(zip(v, names))
+COLS(v) = print(v)
+COLS(names::Vector) = begin
+  println(1)
+  i = Cols(names=names)
+  println(2)
+  for (n,s) in enumerate(names)
+    println(3)
     col = COL(s,n)
     push!(i.all, col)
     if s[end] != "X" 
