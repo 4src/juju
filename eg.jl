@@ -30,4 +30,3 @@ go["--oo"] = () -> begin
   oo(the) end
 
 [go[s]() for s in ARGS if s in keys(go)] 
-

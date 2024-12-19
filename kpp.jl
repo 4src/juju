@@ -18,9 +18,9 @@ the = (;Dict(Symbol(k) => coerce(v)
 #------------------------------------------------------------------------------
 @kwdef mutable struct Data rows=[]; cols=nothing end
 @kwdef mutable struct Cols all=[]; x=[]; y=[]; names=[]; klass=nothing end
-@kwdef mutable struct Sym pos=0; txt=""; n=0; has=[]; mode=nothing; most=0 end
+@kwdef mutable struct Sym txt=""; pos=0; n=0; has=[]; mode=nothing; most=0 end
 @kwdef mutable struct Num  
-  pos=0; txt=""; n=0; goal=1; mu=0; sd=0; m2=0; lo=Big; hi=-Big end
+  txt=""; pos=0; n=0; goal=1; mu=0; sd=0; m2=0; lo=Big; hi=-Big end
 
 Col = Union{Sym,Num}
 
@@ -28,13 +28,13 @@ Col = Union{Sym,Num}
 adds(i::Col,  v::Vector) = [add(i,row) for row in v] 
 adds(i::Data, file::Str) = csv(open(file), (row) -> add(i,row)) 
 
-adds(v::Vector; i=nothing) = begin 
-  if isnothing(i) i=(first(v) isa Number ? Num : Sym)() end
+function adds(v::Vector; i=nothing) 
+  i = if isnothing(i) (first(v) isa Number ? Num : Sym)() else i end
   [add(i,x) for x in v]
   i end
 
 #-------------------------------------------------------------------------------
-COLS(i::Cols, names::Vector) = begin
+function COLS(i::Cols, names::Vector) 
   i.names = names
   for (n,s) in enumerate(names)
     col = if isuppercase(first(s)) 
@@ -49,9 +49,8 @@ COLS(i::Cols, names::Vector) = begin
 
 #-------------------------------------------------------------------------------
 add(i::Cols, row::Vector)::Vector = [add(j, row[j.pos]) for j in i.all] 
-add(i::Data, row::Vector) = begin
-  print(i.cols)
-  isnothing(i.cols) ? i.cols=COLS(Cols(),row) : push!(i.rows, add(i.cols,row))  end
+add(i::Data, row::Vector) =
+  isnothing(i.cols) ? i.cols=COLS(Cols(),row) : push!(i.rows, add(i.cols,row)) 
 
 function add(i::Col, x::Atom)::Atom
   if x != "?" 
