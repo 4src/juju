@@ -7,47 +7,53 @@ USAGE:
   lua kseed.lua [OPTIONS]  
 
 OPTIONS:
-  -d file  csv file of data        = ../../moot/optimize/misc/auto93.csv 
-  -p int   coefficient of distance = 2
-  -r int   random number seed      = 1234567891
-  -s int   #samples searched for each new centroid = 32"
+  -d data   csv file of data        = data/auto93.csv 
+  -p p      coefficient of distance = 2
+  -r rseed  random number seed      = 1234567891
+  -s some   #samples searched for each new centroid = 32"
 
-  the = (;Dict(Symbol(k) => coerce(v) 
-  for (k,v) in eachmatch(r" -(\S+)[^=]+= *(\S+)",about))...) 
+the = (;Dict(Symbol(k) => coerce(v) 
+        for (k,v) in eachmatch(r" -. (\S+)[^=]+= *(\S+)",about))...) 
 
 #------------------------------------------------------------------------------
 @kwdef mutable struct Data rows=[]; cols=nothing end
 @kwdef mutable struct Cols all=[]; x=[]; y=[]; names=[]; klass=nothing end
-@kwdef mutable struct Sym  pos=0; txt=""; n=0; all=[]; mode=nothing; most=0 end
+@kwdef mutable struct Sym pos=0; txt=""; n=0; has=[]; mode=nothing; most=0 end
 @kwdef mutable struct Num  
-  pos=0; txt=""; n=0; goal=1; mu=0; sd=0; md=20; lo=Big; hi=-Big end
+  pos=0; txt=""; n=0; goal=1; mu=0; sd=0; m2=0; lo=Big; hi=-Big end
 
-NUM(s::Str, pos::Int) = Num(pos=pos, txt=s, goal= s[end]=="-" ? 0 : 1)
-COL(s::Str, pos::Int) = (occursin(r"^[A-Z]", s) ? NUM : Sym)(s,pos])
+Col = Union{Sym,Num}
 
-COLS(v) = print(v)
-COLS(names::Vector) = begin
-  println(1)
-  i = Cols(names=names)
-  println(2)
-  for (n,s) in enumerate(names)
-    println(3)
-    col = COL(s,n)
-    push!(i.all, col)
-    if s[end] != "X" 
-      if s[end] == "!" i.klass=col end
-      (occursin(s[end],"!+-") ? i.y : i.x)[n] = col end end  
+#-------------------------------------------------------------------------------
+adds(i::Col,  v::Vector) = [add(i,row) for row in v] 
+adds(i::Data, file::Str) = csv(open(file), (row) -> add(i,row)) 
+
+adds(v::Vector; i) = begin 
+  if isnothing(i)
+    i = isnumber(first(v)) ? Num() : Sym() end
+  [add(i,x) for x in v]
   i end
 
 #-------------------------------------------------------------------------------
-adds(i::Data, v::Vector) = [add(i,row) for row in v] 
-adds(i::Data, file::Str) = csv(open(file), (row) -> add(i,row)) 
+make(i::Cols, names::Vector) = begin
+  i.names = names
+  for (n,s) in enumerate(names)
+    col = if isuppercase(first(s)) 
+            Num(txt=s, pos=n, goal= last(s)=='-' ? 0 : 1)
+          else 
+            Sym(txt=s, pos=n) end
+    push!(i.all, col)
+    if last(s) == 'X' continue end
+    if last(s) == '!' i.klass=col end
+    push!(occursin(last(s), "!+-") ? i.y : i.x,  col) end 
+  i end
 
+#-------------------------------------------------------------------------------
 add(i::Cols, row::Vector)::Vector = [add(j, row[j.pos]) for j in i.all] 
 add(i::Data, row::Vector) = 
-  isnothing(i.cols) ? i.cols = COLS(row) : push!(i.rows, add(i.cols,row)) 
+  isnothing(i.cols) ? i.cols=make(Cols(),row) : push!(i.rows, add(i.cols,row)) 
 
-function add(i, x::Atom)::Atom
+function add(i::Col, x::Atom)::Atom
   if x != "?" 
     i.n  += 1
     _add(i,x) end
@@ -61,10 +67,6 @@ function _add(i::Num, x::Atom)
   i.hi  = max(i.hi, x) end
 
 function _add(i::Sym, x::Atom) 
-  tmp = i.has[x] = 1 + get(i.has, x, 0)
-  if tmp>i.most 
-    i.most,i.mode=tmp,x end end 
-
-#-------------------------------------------------------------------------------
-
-#-------------------------------------------------------------------------------
+  n = i.has[x] = 1 + get(i.has, x, 0)
+  if n > i.most 
+    i.most,i.mode = n,x end end 
